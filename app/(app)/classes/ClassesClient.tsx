@@ -1,0 +1,114 @@
+'use client'
+
+import { useState } from 'react'
+import { X, Trash2 } from 'lucide-react'
+import { addClass, updateClassTeacher, deleteClass } from './actions'
+
+type ClassRow = { id: string; name: string; teacher_id: string | null; profiles: { full_name: string } | null }
+type Teacher = { id: string; full_name: string }
+
+export default function ClassesClient({
+  classes, teachers, studentCounts, loadError,
+}: { classes: ClassRow[]; teachers: Teacher[]; studentCounts: Record<string, number>; loadError?: string }) {
+  const [showAdd, setShowAdd] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
+
+  async function handleAdd(formData: FormData) {
+    setSaving(true)
+    setFormError(null)
+    const res = await addClass(formData)
+    setSaving(false)
+    if (res?.error) setFormError(res.error)
+    else setShowAdd(false)
+  }
+
+  async function handleTeacherChange(classId: string, teacherId: string) {
+    setBusyId(classId)
+    await updateClassTeacher(classId, teacherId || null)
+    setBusyId(null)
+  }
+
+  async function handleDelete(classId: string) {
+    if (!confirm('Delete this class? Students assigned to it will keep their record but lose the class link.')) return
+    setBusyId(classId)
+    await deleteClass(classId)
+    setBusyId(null)
+  }
+
+  return (
+    <>
+      {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">Couldn&apos;t load classes: {loadError}</div>}
+
+      <div className="flex justify-end mb-4">
+        <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ Add Class</button>
+      </div>
+
+      <div className="bg-surface border border-border rounded-card shadow-sm overflow-hidden">
+        <table className="w-full text-[13px] border-collapse">
+          <thead>
+            <tr className="bg-[#FBF8F0]">
+              {['Class Name', 'Assigned Teacher', 'Students', ''].map(h => (
+                <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {classes.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">No classes yet. Add your first one.</td></tr>}
+            {classes.map(c => (
+              <tr key={c.id}>
+                <td className="px-4 py-[11px] border-b border-border font-semibold">{c.name}</td>
+                <td className="px-4 py-[11px] border-b border-border">
+                  <select
+                    defaultValue={c.teacher_id || ''}
+                    disabled={busyId === c.id}
+                    onChange={e => handleTeacherChange(c.id, e.target.value)}
+                    className="px-2 py-[6px] border border-border rounded-[7px] text-[12.5px] bg-[#FEFDFA]"
+                  >
+                    <option value="">Unassigned</option>
+                    {teachers.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
+                  </select>
+                </td>
+                <td className="px-4 py-[11px] border-b border-border">{studentCounts[c.id] || 0}</td>
+                <td className="px-4 py-[11px] border-b border-border">
+                  <button onClick={() => handleDelete(c.id)} disabled={busyId === c.id} className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50">
+                    <Trash2 size={15} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {showAdd && (
+        <div className="fixed inset-0 bg-primary-dark/35 z-50 flex items-center justify-center" onClick={() => setShowAdd(false)}>
+          <div className="w-[400px] max-w-[92vw] bg-surface rounded-card p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-display text-[16px] font-semibold">Add Class</h3>
+              <button onClick={() => setShowAdd(false)} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
+            </div>
+            <form action={handleAdd} className="flex flex-col gap-4">
+              {formError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{formError}</div>}
+              <div>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Class Name</label>
+                <input name="name" placeholder="e.g. Hifz - Year 3" required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+              </div>
+              <div>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Assigned Teacher (optional)</label>
+                <select name="teacher_id" className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+                  <option value="">Unassigned</option>
+                  {teachers.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
+                </select>
+              </div>
+              <button type="submit" disabled={saving} className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors mt-1 disabled:opacity-60">
+                {saving ? 'Saving...' : 'Save Class'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
