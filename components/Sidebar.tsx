@@ -7,7 +7,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard, Users, GraduationCap, CalendarCheck, Wallet,
   TrendingUp, TrendingDown, FileBarChart2, ShieldCheck, Settings,
-  Coins, LineChart, UserCircle, BookOpen, Banknote,
+  Coins, LineChart, UserCircle, BookOpen, Banknote, LogOut,
 } from 'lucide-react'
 
 const icons: Record<string, LucideIcon> = {
@@ -38,7 +38,7 @@ export default function Sidebar({ role, open, onClose }: { role: string; open: b
         <div className="fixed inset-0 bg-black/30 z-40 md:hidden" onClick={onClose} />
       )}
       <aside
-        className={`w-[248px] shrink-0 bg-primary-dark text-[#EFE9D8] flex flex-col p-[22px_14px] fixed md:sticky top-0 h-screen z-50 transition-transform
+        className={`w-[248px] shrink-0 bg-primary-dark text-[#EFE9D8] flex flex-col p-[22px_14px] fixed md:sticky top-0 h-[100dvh] z-50 transition-transform
           ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
       >
         <div className="flex items-center gap-[10px] px-[10px] pb-[22px] border-b border-white/10 mb-4">
@@ -72,7 +72,10 @@ export default function Sidebar({ role, open, onClose }: { role: string; open: b
         </nav>
 
         <form action="/auth/logout" method="post" className="border-t border-white/10 pt-3 mt-2">
-          <button className="text-[12px] text-[#8FA093] hover:text-white transition-colors">Log out</button>
+          <button className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white text-[13.5px] font-semibold rounded-[9px] py-[10px] transition-colors">
+            <LogOut size={16} />
+            Log out
+          </button>
         </form>
       </aside>
     </>
