@@ -27,7 +27,7 @@ export default function TeachersClient({
   const [editError, setEditError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
-  const canManage = role === 'mohtamim'
+  const canManage = role === 'mohtamim' || role === 'nazim'
 
   async function handleEditSave(formData: FormData) {
     if (!editTarget) return

@@ -27,6 +27,43 @@ export default function FeesClient({
     setBusyId(null)
   }
 
+  function printReceipt(f: Fee) {
+    const win = window.open('', '_blank', 'width=420,height=600')
+    if (!win) return
+    win.document.write(`
+      <html dir="rtl" lang="ur">
+      <head>
+        <title>رسید</title>
+        <style>
+          body { font-family: 'Noto Nastaliq Urdu', 'Noto Sans Arabic', sans-serif; padding: 28px; color: #24291F; }
+          h2 { margin: 0 0 4px; }
+          .sub { color: #767C6C; font-size: 13px; margin-bottom: 22px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          td { padding: 8px 0; border-bottom: 1px dashed #E7DFC9; font-size: 14px; }
+          td:first-child { color: #767C6C; }
+          td:last-child { text-align: left; font-weight: 600; }
+          .amt { color: #2E6B57; font-size: 18px; font-weight: 700; }
+        </style>
+      </head>
+      <body>
+        <h2>قصر السلام مدرسہ</h2>
+        <div class="sub">فیس کی رسید</div>
+        <table>
+          <tr><td>طالب علم</td><td>${f.students?.full_name || '-'}</td></tr>
+          <tr><td>کلاس</td><td>${f.students?.classes?.name || '-'}</td></tr>
+          <tr><td>مہینہ</td><td>${f.month}</td></tr>
+          <tr><td>ادائیگی کی تاریخ</td><td>${f.paid_on || '-'}</td></tr>
+          <tr><td>رقم</td><td class="amt">Rs ${Number(f.amount).toLocaleString('en-PK')}</td></tr>
+        </table>
+      </body>
+      </html>
+    `)
+    win.document.close()
+    win.focus()
+    win.print()
+    win.close()
+  }
+
   async function handleAdd(formData: FormData) {
     setSaving(true)
     setFormError(null)
@@ -76,7 +113,7 @@ export default function FeesClient({
                       {busyId === f.id ? 'محفوظ ہو رہا ہے...' : 'وصول کریں'}
                     </button>
                   ) : (
-                    <button onClick={() => window.print()} className="text-[12px] border border-border rounded-[7px] px-3 py-[6px]">رسید پرنٹ کریں</button>
+                    <button onClick={() => printReceipt(f)} className="text-[12px] border border-border rounded-[7px] px-3 py-[6px]">رسید پرنٹ کریں</button>
                   )}
                 </td>
               </tr>

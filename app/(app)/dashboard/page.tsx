@@ -19,7 +19,7 @@ export default async function DashboardPage() {
     supabase.from('expenses').select('*, profiles(full_name)'),
     supabase.from('fees').select('*, students(full_name)'),
     supabase.from('other_funds').select('*'),
-    supabase.from('attendance').select('status, person_type, student_id, teacher_id, students(full_name), profiles(full_name)').eq('date', today),
+    supabase.from('attendance').select('status, person_type, student_id, teacher_id, students(full_name), profiles!attendance_teacher_id_fkey(full_name)').eq('date', today),
   ])
 
   const normalize = (rows: any[] | null, key: string) =>

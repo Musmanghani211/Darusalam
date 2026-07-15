@@ -16,9 +16,9 @@ export default async function ReportsPage() {
     supabase.from('students').select('id, full_name, status, classes(name)').order('full_name'),
     supabase.from('profiles').select('id, full_name, status').eq('role', 'teacher'),
     supabase.from('fees').select('*, students(full_name)').order('created_at', { ascending: false }),
-    supabase.from('attendance').select('status, person_type, students(full_name), profiles(full_name)').eq('date', today),
+    supabase.from('attendance').select('status, person_type, students(full_name), profiles!attendance_teacher_id_fkey(full_name)').eq('date', today),
     supabase.from('other_funds').select('*').order('date', { ascending: false }),
-    supabase.from('salary_slips').select('*, profiles(full_name)').order('created_at', { ascending: false }),
+    supabase.from('salary_slips').select('*, profiles!salary_slips_teacher_id_fkey(full_name)').order('created_at', { ascending: false }),
   ])
 
   const normalize = (rows: any[] | null, key: string) =>
