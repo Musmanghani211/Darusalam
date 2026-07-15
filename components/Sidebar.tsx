@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { navConfig } from '@/lib/nav-config'
+import SubmitButton from './SubmitButton'
 import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard, Users, GraduationCap, CalendarCheck, Wallet,
@@ -72,10 +73,13 @@ export default function Sidebar({ role, open, onClose }: { role: string; open: b
         </nav>
 
         <form action="/auth/logout" method="post" className="border-t border-white/10 pt-3 mt-2">
-          <button className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white text-[13.5px] font-semibold rounded-[9px] py-[10px] transition-colors">
+          <SubmitButton
+            pendingText="Logging out..."
+            className="w-full bg-white/10 hover:bg-white/20 text-white text-[13.5px] font-semibold rounded-[9px] py-[10px]"
+          >
             <LogOut size={16} />
             Log out
-          </button>
+          </SubmitButton>
         </form>
       </aside>
     </>

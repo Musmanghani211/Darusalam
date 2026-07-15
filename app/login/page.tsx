@@ -1,4 +1,5 @@
 import { login } from './actions'
+import SubmitButton from '@/components/SubmitButton'
 
 export default function LoginPage({
   searchParams,
@@ -52,12 +53,12 @@ export default function LoginPage({
                 placeholder="••••••••"
               />
             </div>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Logging in..."
               className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors mt-1"
             >
               Log in
-            </button>
+            </SubmitButton>
           </form>
         </div>
 
