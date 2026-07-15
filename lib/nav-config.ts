@@ -35,7 +35,7 @@ export const navConfig: Record<string, NavItem[]> = {
 }
 
 export const roleLabel: Record<string, string> = {
-  mohtamim: 'Mohtamim · Super Admin',
-  nazim: 'Nazim · Administrator',
-  teacher: 'Teacher · Ustaz',
+  mohtamim: 'Mohtamim',
+  nazim: 'Nazim',
+  teacher: 'Teacher',
 }
