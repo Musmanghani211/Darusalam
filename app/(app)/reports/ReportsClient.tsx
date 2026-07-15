@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import { statusLabel } from '@/lib/labels'
 
 function fmt(n: number) {
   return 'Rs ' + Math.round(Number(n)).toLocaleString('en-PK')
@@ -37,14 +38,14 @@ export default function ReportsClient({
   const totalSalaryPaid = salarySlips.reduce((s, r) => s + Number(r.net_paid), 0)
 
   const cards = [
-    { key: 'income', title: 'Income Report', value: fmt(grandIncome), note: `${income.length + funds.length + paidFees.length} entries recorded` },
-    { key: 'expense', title: 'Expense Report', value: fmt(totalExpense), note: `${expenses.length} entries recorded` },
-    { key: 'balance', title: 'Balance Report', value: fmt(balance), note: 'Total income minus total expense' },
-    { key: 'students', title: 'Student Report', value: String(students.length), note: 'Tap to view full list' },
-    { key: 'teachers', title: 'Teacher Report', value: String(teachers.length), note: 'Tap to view full list' },
-    { key: 'attendance', title: 'Attendance Report', value: `${presentToday} / ${students.filter(s => s.status === 'Active').length}`, note: 'Present today — tap for absentees' },
-    { key: 'fees', title: 'Fee Report', value: `${fmt(totalFeesCollected)} collected`, note: `${fmt(totalPendingFees)} still pending` },
-    { key: 'salary', title: 'Salary Report', value: fmt(totalSalaryPaid), note: `${salarySlips.length} slips generated` },
+    { key: 'income', title: 'آمدنی کی رپورٹ', value: fmt(grandIncome), note: `${income.length + funds.length + paidFees.length} اندراجات` },
+    { key: 'expense', title: 'اخراجات کی رپورٹ', value: fmt(totalExpense), note: `${expenses.length} اندراجات` },
+    { key: 'balance', title: 'بیلنس کی رپورٹ', value: fmt(balance), note: 'کل آمدنی مائنس کل اخراجات' },
+    { key: 'students', title: 'طلبہ کی رپورٹ', value: String(students.length), note: 'مکمل فہرست دیکھنے کے لیے تھپتھپائیں' },
+    { key: 'teachers', title: 'اساتذہ کی رپورٹ', value: String(teachers.length), note: 'مکمل فہرست دیکھنے کے لیے تھپتھپائیں' },
+    { key: 'attendance', title: 'حاضری کی رپورٹ', value: `${presentToday} / ${students.filter(s => s.status === 'Active').length}`, note: 'آج حاضر — غائب دیکھنے کے لیے تھپتھپائیں' },
+    { key: 'fees', title: 'فیس کی رپورٹ', value: `${fmt(totalFeesCollected)} وصول`, note: `${fmt(totalPendingFees)} زیر التوا` },
+    { key: 'salary', title: 'تنخواہ کی رپورٹ', value: fmt(totalSalaryPaid), note: `${salarySlips.length} سلپس بنیں` },
   ]
 
   return (
@@ -74,11 +75,11 @@ export default function ReportsClient({
 
               {open === 'income' && (
                 <>
-                  <SectionTitle text={`Manual Income (${fmt(totalIncome)})`} />
+                  <SectionTitle text={`دستی آمدنی (${fmt(totalIncome)})`} />
                   {income.map(r => <RowLine key={r.id} left={`${r.date} · ${r.source}`} sub={r.category} right={`+${fmt(r.amount)}`} positive />)}
-                  <SectionTitle text={`Other Funds (${fmt(totalFunds)})`} />
+                  <SectionTitle text={`دیگر فنڈز (${fmt(totalFunds)})`} />
                   {funds.map(r => <RowLine key={r.id} left={`${r.date} · ${r.source}`} sub={r.purpose || ''} right={`+${fmt(r.amount)}`} positive />)}
-                  <SectionTitle text={`Fees Collected (${fmt(totalFeesCollected)})`} />
+                  <SectionTitle text={`فیس وصول (${fmt(totalFeesCollected)})`} />
                   {paidFees.map(r => <RowLine key={r.id} left={`${r.paid_on || '-'} · ${r.students?.full_name || '-'}`} sub={r.month} right={`+${fmt(r.amount)}`} positive />)}
                   {income.length + funds.length + paidFees.length === 0 && <Empty />}
                 </>
@@ -93,10 +94,10 @@ export default function ReportsClient({
 
               {open === 'balance' && (
                 <>
-                  <RowLine left="Total Income" right={fmt(grandIncome)} positive />
-                  <RowLine left="Total Expense" right={fmt(totalExpense)} />
+                  <RowLine left="کل آمدنی" right={fmt(grandIncome)} positive />
+                  <RowLine left="کل اخراجات" right={fmt(totalExpense)} />
                   <div className="border-t border-border mt-3 pt-3">
-                    <RowLine left="Net Balance" right={fmt(balance)} positive={balance >= 0} bold />
+                    <RowLine left="خالص بیلنس" right={fmt(balance)} positive={balance >= 0} bold />
                   </div>
                 </>
               )}
@@ -105,7 +106,7 @@ export default function ReportsClient({
                 <>
                   {students.length === 0 && <Empty />}
                   {students.map(s => (
-                    <RowLine key={s.id} left={s.full_name} sub={s.classes?.name || '-'} right={s.status} />
+                    <RowLine key={s.id} left={s.full_name} sub={s.classes?.name || '-'} right={statusLabel[s.status] || s.status} />
                   ))}
                 </>
               )}
@@ -113,19 +114,19 @@ export default function ReportsClient({
               {open === 'teachers' && (
                 <>
                   {teachers.length === 0 && <Empty />}
-                  {teachers.map(t => <RowLine key={t.id} left={t.full_name} right={t.status} />)}
+                  {teachers.map(t => <RowLine key={t.id} left={t.full_name} right={statusLabel[t.status] || t.status} />)}
                 </>
               )}
 
               {open === 'attendance' && (
                 <>
-                  <SectionTitle text={`Present (${presentToday})`} />
+                  <SectionTitle text={`حاضر (${presentToday})`} />
                   {attendanceToday.filter(a => a.person_type === 'student' && a.status === 'Present').map((a, i) => (
-                    <RowLine key={i} left={a.students?.full_name || '-'} right="Present" positive />
+                    <RowLine key={i} left={a.students?.full_name || '-'} right="حاضر" positive />
                   ))}
-                  <SectionTitle text={`Absent (${absentToday.length})`} />
+                  <SectionTitle text={`غائب (${absentToday.length})`} />
                   {absentToday.map((a, i) => (
-                    <RowLine key={i} left={a.students?.full_name || '-'} right="Absent" />
+                    <RowLine key={i} left={a.students?.full_name || '-'} right="غائب" />
                   ))}
                   {attendanceToday.length === 0 && <Empty />}
                 </>
@@ -133,9 +134,9 @@ export default function ReportsClient({
 
               {open === 'fees' && (
                 <>
-                  <SectionTitle text={`Paid (${fmt(totalFeesCollected)})`} />
+                  <SectionTitle text={`ادا شدہ (${fmt(totalFeesCollected)})`} />
                   {paidFees.map(f => <RowLine key={f.id} left={f.students?.full_name || '-'} sub={f.month} right={`+${fmt(f.amount)}`} positive />)}
-                  <SectionTitle text={`Pending (${fmt(totalPendingFees)})`} />
+                  <SectionTitle text={`زیر التوا (${fmt(totalPendingFees)})`} />
                   {pendingFees.map(f => <RowLine key={f.id} left={f.students?.full_name || '-'} sub={f.month} right={fmt(f.amount)} />)}
                   {fees.length === 0 && <Empty />}
                 </>
@@ -175,5 +176,5 @@ function RowLine({ left, sub, right, positive, bold }: { left: string; sub?: str
 }
 
 function Empty() {
-  return <p className="text-[13px] text-muted py-6 text-center">No records yet.</p>
+  return <p className="text-[13px] text-muted py-6 text-center">ابھی کوئی ریکارڈ نہیں۔</p>
 }

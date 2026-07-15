@@ -48,8 +48,8 @@ export default function Sidebar({ role, open, onClose }: { role: string; open: b
             <path d="M15 6C9.5 6 6.5 11 6.5 16.5V29h17V16.5C23.5 11 20.5 6 15 6Z" fill="#153229" />
           </svg>
           <div className="leading-tight">
-            <div className="font-display text-[15.5px] font-semibold text-[#F6F1E1]">Qasr-us-Salam</div>
-            <div className="text-[10.5px] text-[#B7C4B9] uppercase tracking-wide">Madrasa System</div>
+            <div className="font-display text-[16px] font-semibold text-[#F6F1E1]">قصر السلام</div>
+            <div className="text-[10.5px] text-[#B7C4B9]">مدرسہ سسٹم</div>
           </div>
         </div>
 
@@ -74,11 +74,11 @@ export default function Sidebar({ role, open, onClose }: { role: string; open: b
 
         <form action="/auth/logout" method="post" className="border-t border-white/10 pt-3 mt-2">
           <SubmitButton
-            pendingText="Logging out..."
+            pendingText="لاگ آؤٹ ہو رہا ہے..."
             className="w-full bg-white/10 hover:bg-white/20 text-white text-[13.5px] font-semibold rounded-[9px] py-[10px]"
           >
             <LogOut size={16} />
-            Log out
+            لاگ آؤٹ
           </SubmitButton>
         </form>
       </aside>

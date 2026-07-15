@@ -19,8 +19,8 @@ const config: Config = {
         income: { DEFAULT: '#2E6B57', bg: '#E9F1EB' },
       },
       fontFamily: {
-        display: ['Fraunces', 'serif'],
-        sans: ['Inter', 'sans-serif'],
+        display: ['"Noto Nastaliq Urdu"', 'serif'],
+        sans: ['"Noto Sans Arabic"', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       borderRadius: {

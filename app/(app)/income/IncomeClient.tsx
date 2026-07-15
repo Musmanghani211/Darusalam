@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { X } from 'lucide-react'
 import { addIncome } from './actions'
+import { incomeCategoryLabel } from '@/lib/labels'
 
 type Row = { id: string; category: string; date: string; source: string; amount: number; purpose: string | null; notes: string | null }
 type FeeRow = { id: string; amount: number; paid_on: string | null; month: string; students: { full_name: string } | null }
@@ -44,10 +45,10 @@ export default function IncomeClient({
 
   return (
     <>
-      {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">Couldn&apos;t load income: {loadError}</div>}
+      {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">آمدنی لوڈ نہیں ہو سکی: {loadError}</div>}
 
       <div className="bg-surface border border-border rounded-card shadow-sm p-[14px_18px] mb-4 flex items-center justify-between">
-        <span className="text-[12.5px] font-semibold text-muted uppercase tracking-wide">Total Income (all sources)</span>
+        <span className="text-[12.5px] font-semibold text-muted uppercase tracking-wide">کل آمدنی (تمام ذرائع)</span>
         <span className="font-mono text-[19px] font-semibold text-income">Rs {grandTotal.toLocaleString('en-PK')}</span>
       </div>
 
@@ -58,7 +59,7 @@ export default function IncomeClient({
             onClick={() => setSelected(c)}
             className={`cursor-pointer bg-surface border rounded-[13px] p-[15px_16px] shadow-sm transition-colors ${selected === c ? 'border-primary bg-income-bg' : 'border-border hover:border-gold'}`}
           >
-            <div className="text-[12.5px] font-semibold text-muted">{c}</div>
+            <div className="text-[12.5px] font-semibold text-muted">{incomeCategoryLabel[c] || c}</div>
             <div className="font-mono text-[18px] font-semibold mt-[6px] text-primary">Rs {totals[c].toLocaleString('en-PK')}</div>
           </div>
         ))}
@@ -66,24 +67,24 @@ export default function IncomeClient({
           onClick={() => setSelected(FEES_KEY)}
           className={`cursor-pointer bg-surface border rounded-[13px] p-[15px_16px] shadow-sm transition-colors ${selected === FEES_KEY ? 'border-primary bg-income-bg' : 'border-border hover:border-gold'}`}
         >
-          <div className="text-[12.5px] font-semibold text-muted">Student Fees</div>
+          <div className="text-[12.5px] font-semibold text-muted">طلبہ کی فیس</div>
           <div className="font-mono text-[18px] font-semibold mt-[6px] text-primary">Rs {totals[FEES_KEY].toLocaleString('en-PK')}</div>
-          <div className="text-[10.5px] text-muted mt-1">auto — from Fees module</div>
+          <div className="text-[10.5px] text-muted mt-1">خودکار — فیس ماڈیول سے</div>
         </div>
         <div
           onClick={() => setSelected(FUNDS_KEY)}
           className={`cursor-pointer bg-surface border rounded-[13px] p-[15px_16px] shadow-sm transition-colors ${selected === FUNDS_KEY ? 'border-primary bg-income-bg' : 'border-border hover:border-gold'}`}
         >
-          <div className="text-[12.5px] font-semibold text-muted">Other Funds</div>
+          <div className="text-[12.5px] font-semibold text-muted">دیگر فنڈز</div>
           <div className="font-mono text-[18px] font-semibold mt-[6px] text-primary">Rs {totals[FUNDS_KEY].toLocaleString('en-PK')}</div>
-          <div className="text-[10.5px] text-muted mt-1">auto — from Other Funds module</div>
+          <div className="text-[10.5px] text-muted mt-1">خودکار — دیگر فنڈز ماڈیول سے</div>
         </div>
       </div>
 
       <div className="flex items-center justify-between mt-7 mb-3">
-        <h3 className="text-[15.5px] font-semibold">{selected} — Entries</h3>
+        <h3 className="text-[15.5px] font-semibold">{incomeCategoryLabel[selected] || selected} — اندراجات</h3>
         {!isReadOnly && (
-          <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ Add Entry</button>
+          <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ اندراج شامل کریں</button>
         )}
       </div>
 
@@ -92,13 +93,13 @@ export default function IncomeClient({
           <table className="w-full min-w-[560px] text-[13px] border-collapse">
             <thead>
               <tr className="bg-[#FBF8F0]">
-                {['Paid On', 'Student', 'Month', 'Amount'].map(h => (
+                {['ادائیگی کی تاریخ', 'طالب علم', 'مہینہ', 'رقم'].map(h => (
                   <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {feesRows.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">No fees collected yet.</td></tr>}
+              {feesRows.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">ابھی کوئی فیس وصول نہیں ہوئی۔</td></tr>}
               {feesRows.map(f => (
                 <tr key={f.id}>
                   <td className="px-4 py-[11px] border-b border-border">{f.paid_on || '-'}</td>
@@ -115,13 +116,13 @@ export default function IncomeClient({
           <table className="w-full min-w-[560px] text-[13px] border-collapse">
             <thead>
               <tr className="bg-[#FBF8F0]">
-                {['Date', 'Source', 'Purpose', 'Amount'].map(h => (
+                {['تاریخ', 'ذریعہ', 'مقصد', 'رقم'].map(h => (
                   <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {fundsRows.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">No fund entries yet.</td></tr>}
+              {fundsRows.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">ابھی کوئی فنڈ اندراج نہیں۔</td></tr>}
               {fundsRows.map(f => (
                 <tr key={f.id}>
                   <td className="px-4 py-[11px] border-b border-border">{f.date}</td>
@@ -138,13 +139,13 @@ export default function IncomeClient({
           <table className="w-full min-w-[640px] text-[13px] border-collapse">
             <thead>
               <tr className="bg-[#FBF8F0]">
-                {['Date', 'Donor/Source', 'Amount', 'Purpose', 'Notes'].map(h => (
+                {['تاریخ', 'عطیہ دہندہ/ذریعہ', 'رقم', 'مقصد', 'نوٹس'].map(h => (
                   <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filteredRows.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-10">No entries yet in this category.</td></tr>}
+              {filteredRows.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-10">اس زمرے میں ابھی کوئی اندراج نہیں۔</td></tr>}
               {filteredRows.map(r => (
                 <tr key={r.id}>
                   <td className="px-4 py-[11px] border-b border-border">{r.date}</td>
@@ -163,23 +164,23 @@ export default function IncomeClient({
         <div className="fixed inset-0 bg-primary-dark/35 z-50 flex justify-end" onClick={() => setShowAdd(false)}>
           <div className="w-[440px] max-w-[92vw] bg-surface h-full overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-5 border-b border-border flex justify-between items-start sticky top-0 bg-surface">
-              <h3 className="font-display text-[17px] font-semibold">Add Income Entry</h3>
+              <h3 className="font-display text-[17px] font-semibold">آمدنی کا اندراج شامل کریں</h3>
               <button onClick={() => setShowAdd(false)} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
             </div>
             <form action={handleAdd} className="px-6 py-[22px] flex flex-col gap-4">
               {formError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{formError}</div>}
               <div>
-                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Category</label>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">زمرہ</label>
                 <select name="category" defaultValue={selected} required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                  {categories.map(c => <option key={c} value={c}>{incomeCategoryLabel[c] || c}</option>)}
                 </select>
               </div>
-              <F label="Donor / Source" name="source" required />
-              <F label="Amount" name="amount" type="number" required />
-              <F label="Purpose" name="purpose" />
-              <F label="Notes" name="notes" />
+              <F label="عطیہ دہندہ / ذریعہ" name="source" required />
+              <F label="رقم" name="amount" type="number" required />
+              <F label="مقصد" name="purpose" />
+              <F label="نوٹس" name="notes" />
               <button type="submit" disabled={saving} className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors mt-1 disabled:opacity-60">
-                {saving ? 'Saving...' : 'Save Entry'}
+                {saving ? 'محفوظ ہو رہا ہے...' : 'اندراج محفوظ کریں'}
               </button>
             </form>
           </div>

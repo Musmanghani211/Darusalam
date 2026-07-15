@@ -17,25 +17,25 @@ export default function SettingsClient({ settings, canEdit, loadError }: { setti
     setSaved(true)
   }
 
-  if (loadError) return <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">Couldn&apos;t load settings: {loadError}</div>
+  if (loadError) return <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">ترتیبات لوڈ نہیں ہو سکیں: {loadError}</div>
 
   return (
     <div className="bg-surface border border-border rounded-card shadow-sm p-[18px_20px]">
       <form action={handleSave} className="grid grid-cols-2 gap-3">
-        <F label="Madrasa Name" name="madrasa_name" defaultValue={settings?.madrasa_name} disabled={!canEdit} />
-        <F label="Contact Number" name="contact_number" defaultValue={settings?.contact_number || ''} disabled={!canEdit} />
-        <F label="Address" name="address" defaultValue={settings?.address || ''} disabled={!canEdit} />
-        <F label="Currency" name="currency" defaultValue={settings?.currency} disabled={!canEdit} />
+        <F label="مدرسے کا نام" name="madrasa_name" defaultValue={settings?.madrasa_name} disabled={!canEdit} />
+        <F label="رابطہ نمبر" name="contact_number" defaultValue={settings?.contact_number || ''} disabled={!canEdit} />
+        <F label="پتہ" name="address" defaultValue={settings?.address || ''} disabled={!canEdit} />
+        <F label="کرنسی" name="currency" defaultValue={settings?.currency} disabled={!canEdit} />
         {canEdit && (
           <div className="col-span-2 mt-2">
             <button type="submit" disabled={saving} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors disabled:opacity-60">
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? 'محفوظ ہو رہا ہے...' : 'تبدیلیاں محفوظ کریں'}
             </button>
-            {saved && <span className="text-[12.5px] text-income ml-3">Saved.</span>}
+            {saved && <span className="text-[12.5px] text-income ml-3">محفوظ ہو گیا۔</span>}
           </div>
         )}
       </form>
-      {!canEdit && <p className="text-[11.5px] text-muted mt-4">Only the Mohtamim can edit these settings.</p>}
+      {!canEdit && <p className="text-[11.5px] text-muted mt-4">صرف مہتمم ان ترتیبات میں ترمیم کر سکتے ہیں۔</p>}
     </div>
   )
 }

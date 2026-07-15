@@ -13,14 +13,14 @@ export default function LoginPage({
             <path d="M15 6C9.5 6 6.5 11 6.5 16.5V29h17V16.5C23.5 11 20.5 6 15 6Z" fill="#153229" />
           </svg>
           <div className="leading-tight">
-            <div className="font-display text-[17px] font-semibold text-primary-dark">Qasr-us-Salam</div>
-            <div className="text-[10.5px] text-muted uppercase tracking-wide">Madrasa System</div>
+            <div className="font-display text-[19px] font-semibold text-primary-dark">قصر السلام</div>
+            <div className="text-[11px] text-muted">مدرسہ سسٹم</div>
           </div>
         </div>
 
         <div className="bg-surface border border-border rounded-card shadow-sm p-7">
-          <h1 className="font-display text-[19px] font-semibold mb-1">Log in</h1>
-          <p className="text-[13px] text-muted mb-6">Use the email & password created for you by the Mohtamim.</p>
+          <h1 className="font-display text-[21px] font-semibold mb-1">لاگ ان</h1>
+          <p className="text-[13.5px] text-muted mb-6">وہ ای میل اور پاس ورڈ استعمال کریں جو مہتمم نے آپ کے لیے بنایا ہے۔</p>
 
           {searchParams?.error && (
             <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">
@@ -30,40 +30,42 @@ export default function LoginPage({
 
           <form action={login} className="flex flex-col gap-4">
             <div>
-              <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">
-                Email
+              <label className="block text-[12px] font-semibold text-muted mb-[5px]">
+                ای میل
               </label>
               <input
                 name="email"
                 type="email"
                 required
-                className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]"
+                dir="ltr"
+                className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA] text-left"
                 placeholder="you@qasrussalam.org"
               />
             </div>
             <div>
-              <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">
-                Password
+              <label className="block text-[12px] font-semibold text-muted mb-[5px]">
+                پاس ورڈ
               </label>
               <input
                 name="password"
                 type="password"
                 required
-                className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]"
+                dir="ltr"
+                className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA] text-left"
                 placeholder="••••••••"
               />
             </div>
             <SubmitButton
-              pendingText="Logging in..."
-              className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors mt-1"
+              pendingText="لاگ ان ہو رہا ہے..."
+              className="bg-primary text-white rounded-[9px] py-[10px] text-[14px] font-semibold hover:bg-primary-light transition-colors mt-1"
             >
-              Log in
+              لاگ ان
             </SubmitButton>
           </form>
         </div>
 
-        <p className="text-center text-[11.5px] text-muted mt-5">
-          Naya account chahiye? Apne Mohtamim se contact karein.
+        <p className="text-center text-[12px] text-muted mt-5">
+          نیا اکاؤنٹ چاہیے؟ اپنے مہتمم سے رابطہ کریں۔
         </p>
       </div>
     </div>

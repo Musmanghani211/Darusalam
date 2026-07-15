@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { X } from 'lucide-react'
 import { addExpense } from './actions'
+import { expenseCategoryLabel } from '@/lib/labels'
 
 type Row = { id: string; category: string; date: string; amount: number; notes: string | null; profiles: { full_name: string } | null }
 
@@ -32,7 +33,7 @@ export default function ExpensesClient({ rows, categories, loadError }: { rows: 
 
   return (
     <>
-      {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">Couldn&apos;t load expenses: {loadError}</div>}
+      {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">اخراجات لوڈ نہیں ہو سکے: {loadError}</div>}
 
       <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4 gap-[14px]">
         {categories.map(c => (
@@ -41,28 +42,28 @@ export default function ExpensesClient({ rows, categories, loadError }: { rows: 
             onClick={() => setSelected(c)}
             className={`cursor-pointer bg-surface border rounded-[13px] p-[15px_16px] shadow-sm transition-colors ${selected === c ? 'border-primary bg-danger-bg' : 'border-border hover:border-gold'}`}
           >
-            <div className="text-[12.5px] font-semibold text-muted">{c}</div>
+            <div className="text-[12.5px] font-semibold text-muted">{expenseCategoryLabel[c] || c}</div>
             <div className="font-mono text-[18px] font-semibold mt-[6px] text-danger">Rs {totals[c].toLocaleString('en-PK')}</div>
           </div>
         ))}
       </div>
 
       <div className="flex items-center justify-between mt-7 mb-3">
-        <h3 className="text-[15.5px] font-semibold">{selected} — Entries</h3>
-        <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ Add Entry</button>
+        <h3 className="text-[15.5px] font-semibold">{expenseCategoryLabel[selected] || selected} — اندراجات</h3>
+        <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ اندراج شامل کریں</button>
       </div>
 
       <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
         <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
-              {['Date', 'Category', 'Amount', 'Paid By', 'Notes'].map(h => (
+              {['تاریخ', 'زمرہ', 'رقم', 'ادا کنندہ', 'نوٹس'].map(h => (
                 <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filteredRows.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-10">No entries yet in this category.</td></tr>}
+            {filteredRows.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-10">اس زمرے میں ابھی کوئی اندراج نہیں۔</td></tr>}
             {filteredRows.map(r => (
               <tr key={r.id}>
                 <td className="px-4 py-[11px] border-b border-border">{r.date}</td>
@@ -80,27 +81,27 @@ export default function ExpensesClient({ rows, categories, loadError }: { rows: 
         <div className="fixed inset-0 bg-primary-dark/35 z-50 flex justify-end" onClick={() => setShowAdd(false)}>
           <div className="w-[440px] max-w-[92vw] bg-surface h-full overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-5 border-b border-border flex justify-between items-start sticky top-0 bg-surface">
-              <h3 className="font-display text-[17px] font-semibold">Add Expense Entry</h3>
+              <h3 className="font-display text-[17px] font-semibold">اخراجات کا اندراج شامل کریں</h3>
               <button onClick={() => setShowAdd(false)} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
             </div>
             <form action={handleAdd} className="px-6 py-[22px] flex flex-col gap-4">
               {formError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{formError}</div>}
               <div>
-                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Category</label>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">زمرہ</label>
                 <select name="category" defaultValue={selected} required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
-                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                  {categories.map(c => <option key={c} value={c}>{expenseCategoryLabel[c] || c}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Amount</label>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">رقم</label>
                 <input name="amount" type="number" required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
               </div>
               <div>
-                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Notes</label>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">نوٹس</label>
                 <input name="notes" className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
               </div>
               <button type="submit" disabled={saving} className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors mt-1 disabled:opacity-60">
-                {saving ? 'Saving...' : 'Save Entry'}
+                {saving ? 'محفوظ ہو رہا ہے...' : 'اندراج محفوظ کریں'}
               </button>
             </form>
           </div>

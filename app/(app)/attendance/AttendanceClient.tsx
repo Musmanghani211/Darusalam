@@ -46,7 +46,7 @@ export default function AttendanceClient({
   function sendWhatsApp(student: Student) {
     const num = whatsappNumber(student.phone || '')
     const dateLabel = formatDatePKT(selectedDate)
-    const msg = `Assalamualaikum ${student.guardian_name || ''}, your child ${student.full_name} was marked ABSENT today (${dateLabel}) at Qasr-us-Salam Madrasa. Please contact the administration if needed.`
+    const msg = `السلام علیکم ${student.guardian_name || ''}، آپ کے بچے ${student.full_name} کو آج (${dateLabel}) قصر السلام مدرسہ میں غیر حاضر لگایا گیا ہے۔ ضرورت پڑنے پر انتظامیہ سے رابطہ کریں۔`
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
     setNotifyStudent(null)
   }
@@ -54,7 +54,7 @@ export default function AttendanceClient({
   return (
     <>
       <div className="flex items-center gap-3 mb-5 flex-wrap">
-        <label className="text-[12.5px] font-semibold text-muted">Viewing date:</label>
+        <label className="text-[12.5px] font-semibold text-muted">تاریخ منتخب کریں:</label>
         <input
           type="date"
           value={selectedDate}
@@ -63,39 +63,39 @@ export default function AttendanceClient({
           className="px-3 py-[7px] border border-border rounded-[8px] text-[13px] bg-surface"
         />
         {!isToday && (
-          <button onClick={() => router.push('/attendance')} className="text-[12px] text-primary underline">Back to today</button>
+          <button onClick={() => router.push('/attendance')} className="text-[12px] text-primary underline">آج پر واپس جائیں</button>
         )}
       </div>
 
       <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-[14px] mb-6">
         <div className="bg-surface border border-border rounded-card p-[16px_18px] shadow-sm">
-          <div className="text-[11.5px] text-muted font-semibold uppercase tracking-wide">Student Attendance</div>
+          <div className="text-[11.5px] text-muted font-semibold uppercase tracking-wide">طلبہ کی حاضری</div>
           <div className="font-display font-mono text-[26px] font-semibold mt-[6px]">{presentStudents} / {students.length}</div>
         </div>
         <div
           onClick={() => absentStudents.length > 0 && setShowAbsent(true)}
           className={`bg-surface border rounded-card p-[16px_18px] shadow-sm ${absentStudents.length > 0 ? 'cursor-pointer hover:border-danger border-border' : 'border-border'}`}
         >
-          <div className="text-[11.5px] text-muted font-semibold uppercase tracking-wide">Absent Students</div>
+          <div className="text-[11.5px] text-muted font-semibold uppercase tracking-wide">غائب طلبہ</div>
           <div className="font-display font-mono text-[26px] font-semibold mt-[6px] text-danger">{absentStudents.length}</div>
-          {absentStudents.length > 0 && <div className="text-[11px] text-muted mt-1">Tap to view & notify parents</div>}
+          {absentStudents.length > 0 && <div className="text-[11px] text-muted mt-1">دیکھنے اور اطلاع کے لیے تھپتھپائیں</div>}
         </div>
         {role !== 'teacher' && (
           <div className="bg-surface border border-border rounded-card p-[16px_18px] shadow-sm">
-            <div className="text-[11.5px] text-muted font-semibold uppercase tracking-wide">Teacher Attendance</div>
+            <div className="text-[11.5px] text-muted font-semibold uppercase tracking-wide">اساتذہ کی حاضری</div>
             <div className="font-display font-mono text-[26px] font-semibold mt-[6px]">{presentTeachers} / {teachers.length}</div>
           </div>
         )}
       </div>
 
-      <h3 className="text-[15.5px] font-semibold mb-3">Students</h3>
+      <h3 className="text-[15.5px] font-semibold mb-3">طلبہ</h3>
       <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto mb-6">
         <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
-              <th className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">Name</th>
-              <th className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">Class</th>
-              <th className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">Status</th>
+              <th className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">نام</th>
+              <th className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">کلاس</th>
+              <th className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">حالت</th>
             </tr>
           </thead>
           <tbody>
@@ -107,26 +107,26 @@ export default function AttendanceClient({
                   <td className="px-4 py-[11px] border-b border-border">{s.classes?.name || '-'}</td>
                   <td className="px-4 py-[11px] border-b border-border">
                     <div className="flex gap-2">
-                      <button onClick={() => mark('student', s.id, 'Present')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Present' ? 'bg-income-bg border-income text-income' : 'border-border text-muted'}`}>Present</button>
-                      <button onClick={() => mark('student', s.id, 'Absent')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Absent' ? 'bg-danger-bg border-danger text-danger' : 'border-border text-muted'}`}>Absent</button>
+                      <button onClick={() => mark('student', s.id, 'Present')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Present' ? 'bg-income-bg border-income text-income' : 'border-border text-muted'}`}>حاضر</button>
+                      <button onClick={() => mark('student', s.id, 'Absent')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Absent' ? 'bg-danger-bg border-danger text-danger' : 'border-border text-muted'}`}>غائب</button>
                     </div>
                   </td>
                 </tr>
               )
             })}
-            {students.length === 0 && <tr><td colSpan={3} className="text-center text-muted py-8">No students to mark.</td></tr>}
+            {students.length === 0 && <tr><td colSpan={3} className="text-center text-muted py-8">حاضری لگانے کے لیے کوئی طالب علم نہیں۔</td></tr>}
           </tbody>
         </table>
       </div>
 
       {role !== 'teacher' && (
         <>
-          <h3 className="text-[15.5px] font-semibold mb-3">Teachers</h3>
+          <h3 className="text-[15.5px] font-semibold mb-3">اساتذہ</h3>
           <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
             <table className="w-full min-w-[640px] text-[13px] border-collapse">
               <thead>
                 <tr className="bg-[#FBF8F0]">
-                  <th className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">Name</th>
+                  <th className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">نام</th>
                   <th className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">Status</th>
                 </tr>
               </thead>
@@ -138,8 +138,8 @@ export default function AttendanceClient({
                       <td className="px-4 py-[11px] border-b border-border">{t.full_name}</td>
                       <td className="px-4 py-[11px] border-b border-border">
                         <div className="flex gap-2">
-                          <button onClick={() => mark('teacher', t.id, 'Present')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Present' ? 'bg-income-bg border-income text-income' : 'border-border text-muted'}`}>Present</button>
-                          <button onClick={() => mark('teacher', t.id, 'Absent')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Absent' ? 'bg-danger-bg border-danger text-danger' : 'border-border text-muted'}`}>Absent</button>
+                          <button onClick={() => mark('teacher', t.id, 'Present')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Present' ? 'bg-income-bg border-income text-income' : 'border-border text-muted'}`}>حاضر</button>
+                          <button onClick={() => mark('teacher', t.id, 'Absent')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Absent' ? 'bg-danger-bg border-danger text-danger' : 'border-border text-muted'}`}>غائب</button>
                         </div>
                       </td>
                     </tr>
@@ -155,7 +155,7 @@ export default function AttendanceClient({
         <div className="fixed inset-0 bg-primary-dark/35 z-50 flex justify-end" onClick={() => setShowAbsent(false)}>
           <div className="w-[420px] max-w-[92vw] bg-surface h-full overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-5 border-b border-border flex justify-between items-start sticky top-0 bg-surface">
-              <h3 className="font-display text-[17px] font-semibold">Absent Students</h3>
+              <h3 className="font-display text-[17px] font-semibold">غائب طلبہ</h3>
               <button onClick={() => setShowAbsent(false)} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
             </div>
             <div className="px-6 py-[18px]">
@@ -163,14 +163,14 @@ export default function AttendanceClient({
                 <div key={s.id} className="flex items-center justify-between py-3 border-b border-dashed border-border last:border-0">
                   <div>
                     <div className="text-[13.5px] font-semibold">{s.full_name}</div>
-                    <div className="text-[11.5px] text-muted">{s.classes?.name || '-'} &middot; Guardian: {s.guardian_name || '-'}</div>
+                    <div className="text-[11.5px] text-muted">{s.classes?.name || '-'} &middot; سرپرست: {s.guardian_name || '-'}</div>
                   </div>
                   <button
                     onClick={() => setNotifyStudent(s)}
                     disabled={!s.phone}
                     className="text-[12px] bg-primary text-white rounded-[7px] px-3 py-[7px] font-semibold disabled:opacity-40 flex items-center gap-1"
                   >
-                    <MessageCircle size={13} /> Notify
+                    <MessageCircle size={13} /> اطلاع دیں
                   </button>
                 </div>
               ))}
@@ -182,14 +182,14 @@ export default function AttendanceClient({
       {notifyStudent && (
         <div className="fixed inset-0 bg-primary-dark/35 z-[60] flex items-center justify-center" onClick={() => setNotifyStudent(null)}>
           <div className="w-[320px] bg-surface rounded-card p-5" onClick={e => e.stopPropagation()}>
-            <h4 className="font-display text-[15px] font-semibold mb-1">Notify {notifyStudent.guardian_name || 'Parent'}</h4>
-            <p className="text-[12px] text-muted mb-4">How do you want to send this?</p>
+            <h4 className="font-display text-[15px] font-semibold mb-1">{notifyStudent.guardian_name || 'سرپرست'} کو اطلاع دیں</h4>
+            <p className="text-[12px] text-muted mb-4">یہ کیسے بھیجنا چاہتے ہیں؟</p>
             <div className="flex flex-col gap-2">
               <button onClick={() => sendWhatsApp(notifyStudent)} className="flex items-center gap-2 justify-center bg-[#25D366] text-white rounded-[8px] py-[9px] text-[13px] font-semibold">
-                <MessageCircle size={15} /> WhatsApp
+                <MessageCircle size={15} /> واٹس ایپ
               </button>
               <button disabled className="flex items-center gap-2 justify-center border border-border text-muted rounded-[8px] py-[9px] text-[13px] font-semibold opacity-60">
-                SMS (coming soon)
+                ایس ایم ایس (جلد آ رہا ہے)
               </button>
             </div>
           </div>

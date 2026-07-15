@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { fmtMoney, SectionTitle, RowLine, EmptyRow } from '@/components/ReportRow'
+import { statusLabel } from '@/lib/labels'
 
 type Props = {
   role: string
@@ -74,43 +75,43 @@ export default function DashboardClient({
   }
 
   const titles: Record<string, string> = {
-    students: 'Total Students', teachers: 'Total Teachers', monthlyIncome: 'Monthly Income',
-    monthlyExpense: 'Monthly Expense', balance: 'Current Balance', admissions: 'New Admissions',
-    feesCollected: 'Fees Collected', pendingFees: 'Pending Fees', attendance: "Today's Attendance",
-    myStudents: 'My Students', myAttendance: "Today's Attendance",
+    students: 'کل طلبہ', teachers: 'کل اساتذہ', monthlyIncome: 'ماہانہ آمدنی',
+    monthlyExpense: 'ماہانہ اخراجات', balance: 'موجودہ بیلنس', admissions: 'نئے داخلے',
+    feesCollected: 'وصول شدہ فیس', pendingFees: 'زیر التوا فیس', attendance: 'آج کی حاضری',
+    myStudents: 'میرے طلبہ', myAttendance: 'آج کی حاضری',
   }
 
   return (
     <>
       {role === 'mohtamim' && (
         <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4 gap-[14px]">
-          <Card id="students" label="Total Students" value={String(activeStudents.length)} />
-          <Card id="teachers" label="Total Teachers" value={String(activeTeachers.length)} />
-          <Card id="monthlyIncome" label="Monthly Income" value={fmtMoney(monthlyIncomeTotal)} />
-          <Card id="monthlyExpense" label="Monthly Expense" value={fmtMoney(monthlyExpenseTotal)} />
-          <Card id="balance" label="Current Balance" value={fmtMoney(balance)} />
-          <Card id="admissions" label="New Admissions" value={String(newAdmissions.length)} />
-          <Card id="feesCollected" label="Fees Collected" value={fmtMoney(feesCollectedTotal)} />
-          <Card id="pendingFees" label="Pending Fees" value={fmtMoney(pendingFeesTotal)} down />
-          <Card id="attendance" label="Today's Attendance" value={`${presentStudents.length} / ${activeStudents.length}`} />
+          <Card id="students" label="کل طلبہ" value={String(activeStudents.length)} />
+          <Card id="teachers" label="کل اساتذہ" value={String(activeTeachers.length)} />
+          <Card id="monthlyIncome" label="ماہانہ آمدنی" value={fmtMoney(monthlyIncomeTotal)} />
+          <Card id="monthlyExpense" label="ماہانہ اخراجات" value={fmtMoney(monthlyExpenseTotal)} />
+          <Card id="balance" label="موجودہ بیلنس" value={fmtMoney(balance)} />
+          <Card id="admissions" label="نئے داخلے" value={String(newAdmissions.length)} />
+          <Card id="feesCollected" label="وصول شدہ فیس" value={fmtMoney(feesCollectedTotal)} />
+          <Card id="pendingFees" label="زیر التوا فیس" value={fmtMoney(pendingFeesTotal)} down />
+          <Card id="attendance" label="آج کی حاضری" value={`${presentStudents.length} / ${activeStudents.length}`} />
         </div>
       )}
 
       {role === 'nazim' && (
         <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4 gap-[14px]">
-          <Card id="students" label="Total Students" value={String(activeStudents.length)} />
-          <Card id="teachers" label="Total Teachers" value={String(activeTeachers.length)} />
-          <Card id="feesCollected" label="Fees Collected" value={fmtMoney(feesCollectedTotal)} />
-          <Card id="pendingFees" label="Pending Fees" value={fmtMoney(pendingFeesTotal)} down />
-          <Card id="admissions" label="New Admissions" value={String(newAdmissions.length)} />
-          <Card id="attendance" label="Today's Attendance" value={`${presentStudents.length} / ${activeStudents.length}`} />
+          <Card id="students" label="کل طلبہ" value={String(activeStudents.length)} />
+          <Card id="teachers" label="کل اساتذہ" value={String(activeTeachers.length)} />
+          <Card id="feesCollected" label="وصول شدہ فیس" value={fmtMoney(feesCollectedTotal)} />
+          <Card id="pendingFees" label="زیر التوا فیس" value={fmtMoney(pendingFeesTotal)} down />
+          <Card id="admissions" label="نئے داخلے" value={String(newAdmissions.length)} />
+          <Card id="attendance" label="آج کی حاضری" value={`${presentStudents.length} / ${activeStudents.length}`} />
         </div>
       )}
 
       {role === 'teacher' && (
         <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-[14px]">
-          <Card id="myStudents" label="My Students" value={String(myStudents.length)} />
-          <Card id="myAttendance" label="Today's Attendance" value={`${myPresent.length} / ${myStudents.length}`} />
+          <Card id="myStudents" label="میرے طلبہ" value={String(myStudents.length)} />
+          <Card id="myAttendance" label="آج کی حاضری" value={`${myPresent.length} / ${myStudents.length}`} />
         </div>
       )}
 
@@ -126,24 +127,24 @@ export default function DashboardClient({
               {open === 'students' && (
                 <>
                   {activeStudents.length === 0 && <EmptyRow />}
-                  {activeStudents.map(s => <RowLine key={s.id} left={s.full_name} sub={s.classes?.name || '-'} right="Active" />)}
+                  {activeStudents.map(s => <RowLine key={s.id} left={s.full_name} sub={s.classes?.name || '-'} right="فعال" />)}
                 </>
               )}
 
               {open === 'teachers' && (
                 <>
                   {activeTeachers.length === 0 && <EmptyRow />}
-                  {activeTeachers.map(t => <RowLine key={t.id} left={t.full_name} right="Active" />)}
+                  {activeTeachers.map(t => <RowLine key={t.id} left={t.full_name} right="فعال" />)}
                 </>
               )}
 
               {open === 'monthlyIncome' && (
                 <>
-                  <SectionTitle text={`Manual Income Entries (${fmtMoney(monthIncome.reduce((s, r) => s + Number(r.amount), 0))})`} />
+                  <SectionTitle text={`دستی آمدنی کے اندراجات (${fmtMoney(monthIncome.reduce((s, r) => s + Number(r.amount), 0))})`} />
                   {monthIncome.map(r => <RowLine key={r.id} left={`${r.date} · ${r.source}`} sub={r.category} right={`+${fmtMoney(r.amount)}`} positive />)}
-                  <SectionTitle text={`Other Funds (${fmtMoney(monthFunds.reduce((s, r) => s + Number(r.amount), 0))})`} />
+                  <SectionTitle text={`دیگر فنڈز (${fmtMoney(monthFunds.reduce((s, r) => s + Number(r.amount), 0))})`} />
                   {monthFunds.map(r => <RowLine key={r.id} left={`${r.date} · ${r.source}`} sub={r.purpose || ''} right={`+${fmtMoney(r.amount)}`} positive />)}
-                  <SectionTitle text={`Fees Collected (${fmtMoney(monthFees.reduce((s, r) => s + Number(r.amount), 0))})`} />
+                  <SectionTitle text={`وصول شدہ فیس (${fmtMoney(monthFees.reduce((s, r) => s + Number(r.amount), 0))})`} />
                   {monthFees.map(r => <RowLine key={r.id} left={`${r.paid_on} · ${r.students?.full_name || '-'}`} sub={r.month} right={`+${fmtMoney(r.amount)}`} positive />)}
                   {monthIncome.length + monthFunds.length + monthFees.length === 0 && <EmptyRow />}
                 </>
@@ -158,10 +159,10 @@ export default function DashboardClient({
 
               {open === 'balance' && (
                 <>
-                  <RowLine left="Total Income (all time)" right={fmtMoney(totalIncomeAllTime)} positive />
-                  <RowLine left="Total Expense (all time)" right={fmtMoney(totalExpenseAllTime)} />
+                  <RowLine left="کل آمدنی (تمام وقت)" right={fmtMoney(totalIncomeAllTime)} positive />
+                  <RowLine left="کل اخراجات (تمام وقت)" right={fmtMoney(totalExpenseAllTime)} />
                   <div className="border-t border-border mt-3 pt-3">
-                    <RowLine left="Net Balance" right={fmtMoney(balance)} positive={balance >= 0} bold />
+                    <RowLine left="خالص بیلنس" right={fmtMoney(balance)} positive={balance >= 0} bold />
                   </div>
                 </>
               )}
@@ -189,10 +190,10 @@ export default function DashboardClient({
 
               {open === 'attendance' && (
                 <>
-                  <SectionTitle text={`Present (${presentStudents.length})`} />
-                  {presentStudents.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="Present" positive />)}
-                  <SectionTitle text={`Absent (${absentStudents.length})`} />
-                  {absentStudents.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="Absent" />)}
+                  <SectionTitle text={`حاضر (${presentStudents.length})`} />
+                  {presentStudents.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="حاضر" positive />)}
+                  <SectionTitle text={`غائب (${absentStudents.length})`} />
+                  {absentStudents.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="غائب" />)}
                   {studentAttendance.length === 0 && <EmptyRow />}
                 </>
               )}
@@ -200,16 +201,16 @@ export default function DashboardClient({
               {open === 'myStudents' && (
                 <>
                   {myStudents.length === 0 && <EmptyRow />}
-                  {myStudents.map(s => <RowLine key={s.id} left={s.full_name} sub={s.classes?.name || '-'} right={s.status} />)}
+                  {myStudents.map(s => <RowLine key={s.id} left={s.full_name} sub={s.classes?.name || '-'} right={statusLabel[s.status] || s.status} />)}
                 </>
               )}
 
               {open === 'myAttendance' && (
                 <>
-                  <SectionTitle text={`Present (${myPresent.length})`} />
-                  {myPresent.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="Present" positive />)}
-                  <SectionTitle text={`Absent (${myAbsent.length})`} />
-                  {myAbsent.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="Absent" />)}
+                  <SectionTitle text={`حاضر (${myPresent.length})`} />
+                  {myPresent.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="حاضر" positive />)}
+                  <SectionTitle text={`غائب (${myAbsent.length})`} />
+                  {myAbsent.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="غائب" />)}
                   {myAttendance.length === 0 && <EmptyRow />}
                 </>
               )}

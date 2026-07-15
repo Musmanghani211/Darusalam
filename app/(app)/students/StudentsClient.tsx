@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Search, X } from 'lucide-react'
 import { addStudent, updateStudent } from './actions'
-import { addClass, deleteClass, updateClassTeacher } from './classes-actions'
+import { statusLabel, feeStatusLabel } from '@/lib/labels'
 
 type Student = {
   id: string
@@ -29,7 +29,7 @@ export default function StudentsClient({
 }: {
   role: string
   students: Student[]
-  classes: { id: string; name: string; teacher_id?: string | null; profiles?: { full_name: string } | null }[]
+  classes: { id: string; name: string }[]
   teachers: { id: string; full_name: string }[]
   feesByStudent: { student_id: string; status: string }[]
   loadError?: string
@@ -40,25 +40,10 @@ export default function StudentsClient({
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
-  const [showClassManager, setShowClassManager] = useState(false)
-  const [classSaving, setClassSaving] = useState(false)
-  const [classError, setClassError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
   const canManage = role === 'mohtamim' || role === 'nazim'
-
-  async function handleAddClass(formData: FormData) {
-    setClassSaving(true)
-    setClassError(null)
-    const res = await addClass(formData)
-    setClassSaving(false)
-    if (res?.error) setClassError(res.error)
-  }
-
-  async function handleDeleteClass(id: string) {
-    await deleteClass(id)
-  }
 
   const feeStatusFor = (studentId: string) => {
     const row = feesByStudent.find(f => f.student_id === studentId)
@@ -103,7 +88,7 @@ export default function StudentsClient({
     <>
       {loadError && (
         <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">
-          Couldn&apos;t load students: {loadError}
+          طلبہ لوڈ نہیں ہو سکے: {loadError}
         </div>
       )}
 
@@ -113,25 +98,17 @@ export default function StudentsClient({
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search students..."
+            placeholder="طالب علم تلاش کریں..."
             className="pl-[34px] pr-[14px] py-[9px] border border-border rounded-[9px] text-[13px] w-[230px] bg-surface"
           />
         </div>
         {canManage && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowClassManager(true)}
-              className="bg-surface border border-border text-ink rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:border-primary transition-colors"
-            >
-              Manage Classes
-            </button>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors"
-            >
-              + New Admission
-            </button>
-          </div>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors"
+          >
+            + نیا داخلہ
+          </button>
         )}
       </div>
 
@@ -139,14 +116,14 @@ export default function StudentsClient({
         <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
-              {['ID', 'Name', 'Class', 'Teacher', 'Joined', 'Fees', 'Status'].map(h => (
+              {['شناخت', 'نام', 'کلاس', 'استاذ', 'داخلہ', 'فیس', 'حالت'].map(h => (
                 <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="text-center text-muted py-10">No students yet. Add your first admission.</td></tr>
+              <tr><td colSpan={7} className="text-center text-muted py-10">ابھی کوئی طالب علم نہیں۔ پہلا داخلہ شامل کریں۔</td></tr>
             )}
             {filtered.map(s => (
               <tr key={s.id} onClick={() => { setSelected(s); setEditMode(false); setEditError(null) }} className="hover:bg-[#FBF8F0] cursor-pointer">
@@ -157,12 +134,12 @@ export default function StudentsClient({
                 <td className="px-4 py-[11px] border-b border-border">{s.admission_date}</td>
                 <td className="px-4 py-[11px] border-b border-border">
                   <span className={`badge ${feeStatusFor(s.id) === 'Paid' ? 'bg-income-bg text-income' : 'bg-danger-bg text-danger'}`}>
-                    {feeStatusFor(s.id)}
+                    {feeStatusLabel[feeStatusFor(s.id)]}
                   </span>
                 </td>
                 <td className="px-4 py-[11px] border-b border-border">
                   <span className={`badge ${s.status === 'Active' ? 'bg-[#EFEEE7] text-muted' : 'bg-danger-bg text-danger'}`}>
-                    {s.status}
+                    {statusLabel[s.status] || s.status}
                   </span>
                 </td>
               </tr>
@@ -187,26 +164,26 @@ export default function StudentsClient({
 
             {!editMode ? (
               <div className="px-6 py-[22px]">
-                <DlGroup title="Personal Details">
-                  <DlRow label="Guardian" value={selected.guardian_name || '-'} />
-                  <DlRow label="Contact" value={selected.phone || '-'} />
-                  <DlRow label="CNIC / B-Form" value={selected.cnic_or_bform || '-'} />
-                  <DlRow label="Address" value={selected.address || '-'} />
-                  <DlRow label="Admission Date" value={selected.admission_date} />
+                <DlGroup title="ذاتی تفصیلات">
+                  <DlRow label="سرپرست" value={selected.guardian_name || '-'} />
+                  <DlRow label="رابطہ نمبر" value={selected.phone || '-'} />
+                  <DlRow label="شناختی کارڈ / بی فارم" value={selected.cnic_or_bform || '-'} />
+                  <DlRow label="پتہ" value={selected.address || '-'} />
+                  <DlRow label="داخلہ کی تاریخ" value={selected.admission_date} />
                 </DlGroup>
-                <DlGroup title="Class & Teacher">
-                  <DlRow label="Class" value={selected.classes?.name || '-'} />
-                  <DlRow label="Assigned Teacher" value={selected.profiles?.full_name || '-'} />
-                  <DlRow label="Status" value={selected.status} />
+                <DlGroup title="کلاس اور استاذ">
+                  <DlRow label="کلاس" value={selected.classes?.name || '-'} />
+                  <DlRow label="مقرر استاذ" value={selected.profiles?.full_name || '-'} />
+                  <DlRow label="حالت" value={statusLabel[selected.status] || selected.status} />
                 </DlGroup>
-                <DlGroup title="Sabaq Tracking">
-                  <DlRow label="Current Sabaq" value={selected.current_sabaq || '-'} />
-                  <DlRow label="Sabqi" value={selected.sabqi || '-'} />
-                  <DlRow label="Manzil" value={selected.manzil || '-'} />
+                <DlGroup title="سبق کی نگرانی">
+                  <DlRow label="موجودہ سبق" value={selected.current_sabaq || '-'} />
+                  <DlRow label="سبقی" value={selected.sabqi || '-'} />
+                  <DlRow label="منزل" value={selected.manzil || '-'} />
                 </DlGroup>
                 {canManage && (
                   <button onClick={() => setEditMode(true)} className="btn-primary bg-primary text-white rounded-[9px] py-[10px] w-full text-[13.5px] font-semibold hover:bg-primary-light transition-colors">
-                    Edit Student
+                    طالب علم میں ترمیم کریں
                   </button>
                 )}
               </div>
@@ -214,50 +191,50 @@ export default function StudentsClient({
               <form action={handleEditSave} className="px-6 py-[22px] flex flex-col gap-4">
                 {editError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{editError}</div>}
                 <div>
-                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Full Name</label>
+                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">پورا نام</label>
                   <input name="full_name" defaultValue={selected.full_name} required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
                 </div>
                 <div>
-                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Guardian Name</label>
+                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">سرپرست کا نام</label>
                   <input name="guardian_name" defaultValue={selected.guardian_name || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
                 </div>
                 <div>
-                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Contact Number</label>
+                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">رابطہ نمبر</label>
                   <input name="phone" defaultValue={selected.phone || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
                 </div>
                 <div>
-                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">CNIC / B-Form</label>
+                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">شناختی کارڈ / بی فارم</label>
                   <input name="cnic_or_bform" defaultValue={selected.cnic_or_bform || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
                 </div>
                 <div>
-                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Address</label>
+                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">پتہ</label>
                   <input name="address" defaultValue={selected.address || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
                 </div>
                 <div>
-                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Class</label>
+                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">کلاس</label>
                   <select name="class_id" defaultValue={selected.class_id || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
-                    <option value="">Select class</option>
+                    <option value="">کلاس منتخب کریں</option>
                     {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Assigned Teacher</label>
+                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">مقرر استاذ</label>
                   <select name="teacher_id" defaultValue={selected.teacher_id || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
-                    <option value="">Select teacher</option>
+                    <option value="">استاذ منتخب کریں</option>
                     {teachers.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Status</label>
+                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">حالت</label>
                   <select name="status" defaultValue={selected.status} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="Active">فعال</option>
+                    <option value="Inactive">غیر فعال</option>
                   </select>
                 </div>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setEditMode(false)} className="flex-1 border border-border rounded-[9px] py-[10px] text-[13.5px] font-semibold">Cancel</button>
+                  <button type="button" onClick={() => setEditMode(false)} className="flex-1 border border-border rounded-[9px] py-[10px] text-[13.5px] font-semibold">منسوخ</button>
                   <button type="submit" disabled={editSaving} className="flex-1 bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors disabled:opacity-60">
-                    {editSaving ? 'Saving...' : 'Save Changes'}
+                    {editSaving ? 'محفوظ ہو رہا ہے...' : 'تبدیلیاں محفوظ کریں'}
                   </button>
                 </div>
               </form>
@@ -271,7 +248,7 @@ export default function StudentsClient({
         <div className="fixed inset-0 bg-primary-dark/35 z-50 flex justify-end" onClick={() => setShowAddForm(false)}>
           <div className="w-[460px] max-w-[92vw] bg-surface h-full overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-5 border-b border-border flex justify-between items-start sticky top-0 bg-surface">
-              <h3 className="font-display text-[17px] font-semibold">New Admission</h3>
+              <h3 className="font-display text-[17px] font-semibold">نیا داخلہ</h3>
               <button onClick={() => setShowAddForm(false)} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center">
                 <X size={15} />
               </button>
@@ -279,22 +256,22 @@ export default function StudentsClient({
             <form action={handleAdd} className="px-6 py-[22px] flex flex-col gap-4">
               {formError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{formError}</div>}
 
-              <p className="text-[11.5px] text-muted -mt-1">Admission ID will be auto-generated (e.g. STD-106).</p>
-              <Field label="Full Name" name="full_name" placeholder="Student's full name" required />
-              <Field label="Guardian Name" name="guardian_name" placeholder="Guardian's name" />
-              <Field label="Contact Number" name="phone" placeholder="03XX-XXXXXXX" />
+              <p className="text-[11.5px] text-muted -mt-1">داخلہ نمبر خود بخود بن جائے گا (مثلاً STD-106)۔</p>
+              <Field label="پورا نام" name="full_name" placeholder="طالب علم کا پورا نام" required />
+              <Field label="سرپرست کا نام" name="guardian_name" placeholder="سرپرست کا نام" />
+              <Field label="رابطہ نمبر" name="phone" placeholder="03XX-XXXXXXX" />
 
               <div>
-                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Class</label>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">کلاس</label>
                 <select name="class_id" className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
-                  <option value="">Select class</option>
+                  <option value="">کلاس منتخب کریں</option>
                   {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">Assigned Teacher</label>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">مقرر استاذ</label>
                 <select name="teacher_id" className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
-                  <option value="">Select teacher</option>
+                  <option value="">استاذ منتخب کریں</option>
                   {teachers.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
                 </select>
               </div>
@@ -304,7 +281,7 @@ export default function StudentsClient({
                 disabled={saving}
                 className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors mt-1 disabled:opacity-60"
               >
-                {saving ? 'Saving...' : 'Save Admission'}
+                {saving ? 'محفوظ ہو رہا ہے...' : 'داخلہ محفوظ کریں'}
               </button>
             </form>
           </div>

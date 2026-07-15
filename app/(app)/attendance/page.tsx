@@ -26,6 +26,7 @@ export default async function AttendancePage({
 
   return (
     <AttendanceClient
+      key={selectedDate}
       role={profile?.role || 'teacher'}
       students={students}
       teachers={teachers || []}
