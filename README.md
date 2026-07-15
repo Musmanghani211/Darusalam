@@ -29,19 +29,19 @@ Go to **Supabase → SQL Editor**, paste the contents of `schema_additions.sql` 
 1. **Update the database** (see the warning above — run `schema_additions.sql`)
 
 2. Install dependencies:
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 3. Copy `.env.local.example` to `.env.local` and add your Supabase keys:
-```bash
-cp .env.local.example .env.local
-```
+   ```bash
+   cp .env.local.example .env.local
+   ```
 
 4. Run the app:
-```bash
-npm run dev
-```
+   ```bash
+   npm run dev
+   ```
 
 5. Open `http://localhost:3000` in your browser and log in.
 

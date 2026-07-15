@@ -38,7 +38,7 @@ export default async function ReportsPage() {
   ]
 
   return (
-    <div className="grid grid-cols-3 gap-[14px] max-[1100px]:grid-cols-2">
+    <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3">
       {cards.map(c => (
         <div key={c.title} className="bg-surface border border-border rounded-card shadow-sm p-[16px_18px]">
           <div className="text-[11.5px] text-muted font-semibold uppercase tracking-wide">{c.title}</div>

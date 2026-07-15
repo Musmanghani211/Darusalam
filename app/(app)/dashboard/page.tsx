@@ -44,7 +44,7 @@ export default async function DashboardPage() {
       - (allExpense || []).reduce((s, r: any) => s + Number(r.amount), 0)
 
     return (
-      <div className="grid grid-cols-4 gap-[14px] max-[1100px]:grid-cols-2">
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Students" value={String(totalStudents ?? 0)} />
         <StatCard label="Total Teachers" value={String(totalTeachers ?? 0)} />
         <StatCard label="Monthly Income" value={fmt(monthlyIncome)} />
@@ -59,7 +59,7 @@ export default async function DashboardPage() {
 
   if (role === 'nazim') {
     return (
-      <div className="grid grid-cols-4 gap-[14px] max-[1100px]:grid-cols-2">
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Students" value={String(totalStudents ?? 0)} />
         <StatCard label="Total Teachers" value={String(totalTeachers ?? 0)} />
         <StatCard label="Pending Fees" value={fmt(pendingFeesTotal)} down />
@@ -74,7 +74,7 @@ export default async function DashboardPage() {
     .from('students').select('*', { count: 'exact', head: true }).eq('teacher_id', profile?.id)
 
   return (
-    <div className="grid grid-cols-3 gap-[14px] max-[1100px]:grid-cols-2">
+    <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3">
       <StatCard label="My Students" value={String(myStudents ?? 0)} />
       <StatCard label="Today's Attendance" value={`${presentToday ?? 0} / ${myStudents ?? 0}`} />
     </div>

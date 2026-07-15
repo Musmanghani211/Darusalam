@@ -30,7 +30,7 @@ export default function AttendanceClient({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-[14px] mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-[14px] mb-6">
         <div className="bg-surface border border-border rounded-card p-[16px_18px] shadow-sm">
           <div className="text-[11.5px] text-muted font-semibold uppercase tracking-wide">Student Attendance Today</div>
           <div className="font-display font-mono text-[26px] font-semibold mt-[6px]">{presentStudents} / {students.length}</div>
@@ -44,8 +44,8 @@ export default function AttendanceClient({
       </div>
 
       <h3 className="text-[15.5px] font-semibold mb-3">Students</h3>
-      <div className="bg-surface border border-border rounded-card shadow-sm overflow-hidden mb-6">
-        <table className="w-full text-[13px] border-collapse">
+      <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto mb-6">
+        <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
               <th className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">Name</th>
@@ -77,8 +77,8 @@ export default function AttendanceClient({
       {role !== 'teacher' && (
         <>
           <h3 className="text-[15.5px] font-semibold mb-3">Teachers</h3>
-          <div className="bg-surface border border-border rounded-card shadow-sm overflow-hidden">
-            <table className="w-full text-[13px] border-collapse">
+          <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[640px] text-[13px] border-collapse">
               <thead>
                 <tr className="bg-[#FBF8F0]">
                   <th className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">Name</th>

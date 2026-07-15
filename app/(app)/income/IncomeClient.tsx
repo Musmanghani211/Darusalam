@@ -34,7 +34,7 @@ export default function IncomeClient({ rows, categories, loadError }: { rows: Ro
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">Couldn&apos;t load income: {loadError}</div>}
 
-      <div className="grid grid-cols-4 gap-[14px] max-[1100px]:grid-cols-2">
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4">
         {categories.map(c => (
           <div
             key={c}
@@ -52,8 +52,8 @@ export default function IncomeClient({ rows, categories, loadError }: { rows: Ro
         <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ Add Entry</button>
       </div>
 
-      <div className="bg-surface border border-border rounded-card shadow-sm overflow-hidden">
-        <table className="w-full text-[13px] border-collapse">
+      <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+        <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
               {['Date', 'Donor/Source', 'Amount', 'Purpose', 'Notes'].map(h => (

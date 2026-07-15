@@ -41,8 +41,8 @@ export default function ProgressClient({ students, loadError }: { students: Stud
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">Couldn&apos;t load students: {loadError}</div>}
 
-      <div className="bg-surface border border-border rounded-card shadow-sm overflow-hidden">
-        <table className="w-full text-[13px] border-collapse">
+      <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+        <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
               {['Name', "Today's Sabaq", 'Sabqi', 'Manzil', ''].map(h => (

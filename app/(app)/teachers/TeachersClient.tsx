@@ -62,8 +62,8 @@ export default function TeachersClient({
         </div>
       )}
 
-      <div className="bg-surface border border-border rounded-card shadow-sm overflow-hidden">
-        <table className="w-full text-[13px] border-collapse">
+      <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+        <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
               {['Name', 'Subject', 'Students', ...(canManage ? ['Salary'] : []), 'Status', ...(canManage ? [''] : [])].map(h => (

@@ -48,8 +48,8 @@ export default function FeesClient({
         <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ Add Fee Entry</button>
       </div>
 
-      <div className="bg-surface border border-border rounded-card shadow-sm overflow-hidden">
-        <table className="w-full text-[13px] border-collapse">
+      <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+        <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
               {['Student', 'Class', 'Month', 'Amount', 'Paid On', 'Status', ''].map(h => (

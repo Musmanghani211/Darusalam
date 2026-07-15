@@ -14,7 +14,7 @@ export default async function ProfilePage() {
   const classNames = (classes || []).map((c: any) => c.name).join(', ') || 'Not assigned yet'
 
   return (
-    <div className="grid grid-cols-2 gap-[14px] max-[900px]:grid-cols-1">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-[14px]">
       <div className="bg-surface border border-border rounded-card shadow-sm p-[16px_18px]">
         <h4 className="text-[11.5px] uppercase tracking-wide text-muted font-semibold mb-[10px]">My Class</h4>
         <p className="text-[14px]">{classNames}</p>
