@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, MessageCircle } from 'lucide-react'
 import { markAttendance } from './actions'
+import { todayPKT, formatDatePKT } from '@/lib/date'
 
 type Student = { id: string; full_name: string; phone: string | null; guardian_name: string | null; classes: { name: string } | null }
 type Teacher = { id: string; full_name: string }
@@ -32,7 +33,7 @@ export default function AttendanceClient({
   const [showAbsent, setShowAbsent] = useState(false)
   const [notifyStudent, setNotifyStudent] = useState<Student | null>(null)
 
-  const isToday = selectedDate === new Date().toISOString().slice(0, 10)
+  const isToday = selectedDate === todayPKT()
   const presentStudents = students.filter(s => marks[`student-${s.id}`] === 'Present').length
   const absentStudents = students.filter(s => marks[`student-${s.id}`] === 'Absent')
   const presentTeachers = teachers.filter(t => marks[`teacher-${t.id}`] === 'Present').length
@@ -44,7 +45,7 @@ export default function AttendanceClient({
 
   function sendWhatsApp(student: Student) {
     const num = whatsappNumber(student.phone || '')
-    const dateLabel = new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    const dateLabel = formatDatePKT(selectedDate)
     const msg = `Assalamualaikum ${student.guardian_name || ''}, your child ${student.full_name} was marked ABSENT today (${dateLabel}) at Qasr-us-Salam Madrasa. Please contact the administration if needed.`
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
     setNotifyStudent(null)
@@ -57,7 +58,7 @@ export default function AttendanceClient({
         <input
           type="date"
           value={selectedDate}
-          max={new Date().toISOString().slice(0, 10)}
+          max={todayPKT()}
           onChange={e => router.push(`/attendance?date=${e.target.value}`)}
           className="px-3 py-[7px] border border-border rounded-[8px] text-[13px] bg-surface"
         />

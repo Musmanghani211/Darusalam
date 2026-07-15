@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
+import { todayPKT } from '@/lib/date'
 import ReportsClient from './ReportsClient'
 
 export default async function ReportsPage() {
   const supabase = await createClient()
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayPKT()
 
   const [
     { data: incomeRows }, { data: expenseRows }, { data: students },

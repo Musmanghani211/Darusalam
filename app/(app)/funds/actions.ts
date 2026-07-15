@@ -2,6 +2,7 @@
 
 import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { todayPKT } from '@/lib/date'
 
 export async function addFund(formData: FormData) {
   const supabase = await createClient()
@@ -12,7 +13,7 @@ export async function addFund(formData: FormData) {
   const amount = Number(formData.get('amount') || 0)
   const notes = String(formData.get('notes') || '')
 
-  const { error } = await supabase.from('other_funds').insert({ source, purpose, amount, notes, added_by: profile?.id })
+  const { error } = await supabase.from('other_funds').insert({ source, purpose, amount, notes, added_by: profile?.id, date: todayPKT() })
 
   revalidatePath('/funds')
   return { error: error?.message || null }

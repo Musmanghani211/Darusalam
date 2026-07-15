@@ -2,6 +2,7 @@
 
 import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { todayPKT } from '@/lib/date'
 
 const CATEGORIES = ['Salaries','Electricity','Gas','Water','Food','Maintenance','Stationery','Other']
 
@@ -16,7 +17,7 @@ export async function addExpense(formData: FormData) {
   if (!CATEGORIES.includes(category)) return { error: 'Invalid category' }
 
   const { error } = await supabase.from('expenses').insert({
-    category, amount, notes, paid_by: profile?.id,
+    category, amount, notes, paid_by: profile?.id, date: todayPKT(),
   })
 
   revalidatePath('/expenses')

@@ -2,6 +2,7 @@
 
 import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { todayPKT } from '@/lib/date'
 
 export async function generateSalary(formData: FormData) {
   const supabase = await createClient()
@@ -26,6 +27,7 @@ export async function generateSalary(formData: FormData) {
     amount: net_paid,
     notes: `Salary slip — ${teacherRow?.full_name || 'Teacher'} — ${month}`,
     paid_by: profile?.id,
+    date: todayPKT(),
   })
 
   revalidatePath('/salary')

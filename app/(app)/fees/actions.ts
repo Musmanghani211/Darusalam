@@ -2,11 +2,12 @@
 
 import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { todayPKT } from '@/lib/date'
 
 export async function collectFee(feeId: string) {
   const supabase = await createClient()
   const profile = await getCurrentProfile()
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayPKT()
 
   const { error } = await supabase.from('fees').update({
     status: 'Paid', paid_on: today, collected_by: profile?.id,

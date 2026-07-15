@@ -1,4 +1,5 @@
 import { createClient, getCurrentProfile } from '@/lib/supabase/server'
+import { todayPKT } from '@/lib/date'
 import AttendanceClient from './AttendanceClient'
 
 export default async function AttendancePage({
@@ -6,7 +7,7 @@ export default async function AttendancePage({
 }: { searchParams: { date?: string } }) {
   const profile = await getCurrentProfile()
   const supabase = await createClient()
-  const selectedDate = searchParams?.date || new Date().toISOString().slice(0, 10)
+  const selectedDate = searchParams?.date || todayPKT()
 
   let studentQuery = supabase.from('students').select('id, full_name, phone, guardian_name, classes(name)').eq('status', 'Active')
   if (profile?.role === 'teacher') studentQuery = studentQuery.eq('teacher_id', profile.id)

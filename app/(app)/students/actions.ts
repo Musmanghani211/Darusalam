@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { todayPKT } from '@/lib/date'
 
 export async function addStudent(formData: FormData) {
   const supabase = await createClient()
@@ -17,7 +18,7 @@ export async function addStudent(formData: FormData) {
   const admission_no = `STD-${101 + (count || 0)}`
 
   const { error } = await supabase.from('students').insert({
-    full_name, admission_no, class_id, teacher_id, guardian_name, phone,
+    full_name, admission_no, class_id, teacher_id, guardian_name, phone, admission_date: todayPKT(),
   })
 
   if (error) {
