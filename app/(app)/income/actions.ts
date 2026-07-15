@@ -3,7 +3,7 @@
 import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-const CATEGORIES = ['Zakat','Fitrana','Sadaqah','Lillah','Donations','Student Fees','Other Income']
+const CATEGORIES = ['Zakat','Fitrana','Sadaqah','Lillah','Donations','Other Income']
 
 export async function addIncome(formData: FormData) {
   const supabase = await createClient()

@@ -139,14 +139,14 @@ export default function StudentsClient({
         <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
-              {['ID', 'Name', 'Class', 'Teacher', 'Fees', 'Status'].map(h => (
+              {['ID', 'Name', 'Class', 'Teacher', 'Joined', 'Fees', 'Status'].map(h => (
                 <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={6} className="text-center text-muted py-10">No students yet. Add your first admission.</td></tr>
+              <tr><td colSpan={7} className="text-center text-muted py-10">No students yet. Add your first admission.</td></tr>
             )}
             {filtered.map(s => (
               <tr key={s.id} onClick={() => { setSelected(s); setEditMode(false); setEditError(null) }} className="hover:bg-[#FBF8F0] cursor-pointer">
@@ -154,6 +154,7 @@ export default function StudentsClient({
                 <td className="px-4 py-[11px] border-b border-border">{s.full_name}</td>
                 <td className="px-4 py-[11px] border-b border-border">{s.classes?.name || '-'}</td>
                 <td className="px-4 py-[11px] border-b border-border">{s.profiles?.full_name || '-'}</td>
+                <td className="px-4 py-[11px] border-b border-border">{s.admission_date}</td>
                 <td className="px-4 py-[11px] border-b border-border">
                   <span className={`badge ${feeStatusFor(s.id) === 'Paid' ? 'bg-income-bg text-income' : 'bg-danger-bg text-danger'}`}>
                     {feeStatusFor(s.id)}
@@ -278,7 +279,7 @@ export default function StudentsClient({
             <form action={handleAdd} className="px-6 py-[22px] flex flex-col gap-4">
               {formError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{formError}</div>}
 
-              <Field label="Admission No" name="admission_no" placeholder="STD-106" required />
+              <p className="text-[11.5px] text-muted -mt-1">Admission ID will be auto-generated (e.g. STD-106).</p>
               <Field label="Full Name" name="full_name" placeholder="Student's full name" required />
               <Field label="Guardian Name" name="guardian_name" placeholder="Guardian's name" />
               <Field label="Contact Number" name="phone" placeholder="03XX-XXXXXXX" />

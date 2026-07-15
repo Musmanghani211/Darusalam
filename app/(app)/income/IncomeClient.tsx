@@ -5,8 +5,16 @@ import { X } from 'lucide-react'
 import { addIncome } from './actions'
 
 type Row = { id: string; category: string; date: string; source: string; amount: number; purpose: string | null; notes: string | null }
+type FeeRow = { id: string; amount: number; paid_on: string | null; month: string; students: { full_name: string } | null }
+type FundRow = { id: string; date: string; source: string; purpose: string | null; amount: number; notes: string | null }
 
-export default function IncomeClient({ rows, categories, loadError }: { rows: Row[]; categories: string[]; loadError?: string }) {
+const FEES_KEY = 'Student Fees (auto)'
+const FUNDS_KEY = 'Other Funds (auto)'
+
+export default function IncomeClient({
+  rows, categories, feesRows, fundsRows, loadError,
+}: { rows: Row[]; categories: string[]; feesRows: FeeRow[]; fundsRows: FundRow[]; loadError?: string }) {
+  const allCards = [...categories, FEES_KEY, FUNDS_KEY]
   const [selected, setSelected] = useState(categories[0])
   const [showAdd, setShowAdd] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -16,9 +24,13 @@ export default function IncomeClient({ rows, categories, loadError }: { rows: Ro
     const map: Record<string, number> = {}
     categories.forEach(c => (map[c] = 0))
     rows.forEach(r => { map[r.category] = (map[r.category] || 0) + Number(r.amount) })
+    map[FEES_KEY] = feesRows.reduce((s, r) => s + Number(r.amount), 0)
+    map[FUNDS_KEY] = fundsRows.reduce((s, r) => s + Number(r.amount), 0)
     return map
-  }, [rows, categories])
+  }, [rows, categories, feesRows, fundsRows])
 
+  const grandTotal = allCards.reduce((s, c) => s + (totals[c] || 0), 0)
+  const isReadOnly = selected === FEES_KEY || selected === FUNDS_KEY
   const filteredRows = rows.filter(r => r.category === selected)
 
   async function handleAdd(formData: FormData) {
@@ -34,7 +46,12 @@ export default function IncomeClient({ rows, categories, loadError }: { rows: Ro
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">Couldn&apos;t load income: {loadError}</div>}
 
-      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4">
+      <div className="bg-surface border border-border rounded-card shadow-sm p-[14px_18px] mb-4 flex items-center justify-between">
+        <span className="text-[12.5px] font-semibold text-muted uppercase tracking-wide">Total Income (all sources)</span>
+        <span className="font-mono text-[19px] font-semibold text-income">Rs {grandTotal.toLocaleString('en-PK')}</span>
+      </div>
+
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-[14px]">
         {categories.map(c => (
           <div
             key={c}
@@ -45,36 +62,102 @@ export default function IncomeClient({ rows, categories, loadError }: { rows: Ro
             <div className="font-mono text-[18px] font-semibold mt-[6px] text-primary">Rs {totals[c].toLocaleString('en-PK')}</div>
           </div>
         ))}
+        <div
+          onClick={() => setSelected(FEES_KEY)}
+          className={`cursor-pointer bg-surface border rounded-[13px] p-[15px_16px] shadow-sm transition-colors ${selected === FEES_KEY ? 'border-primary bg-income-bg' : 'border-border hover:border-gold'}`}
+        >
+          <div className="text-[12.5px] font-semibold text-muted">Student Fees</div>
+          <div className="font-mono text-[18px] font-semibold mt-[6px] text-primary">Rs {totals[FEES_KEY].toLocaleString('en-PK')}</div>
+          <div className="text-[10.5px] text-muted mt-1">auto — from Fees module</div>
+        </div>
+        <div
+          onClick={() => setSelected(FUNDS_KEY)}
+          className={`cursor-pointer bg-surface border rounded-[13px] p-[15px_16px] shadow-sm transition-colors ${selected === FUNDS_KEY ? 'border-primary bg-income-bg' : 'border-border hover:border-gold'}`}
+        >
+          <div className="text-[12.5px] font-semibold text-muted">Other Funds</div>
+          <div className="font-mono text-[18px] font-semibold mt-[6px] text-primary">Rs {totals[FUNDS_KEY].toLocaleString('en-PK')}</div>
+          <div className="text-[10.5px] text-muted mt-1">auto — from Other Funds module</div>
+        </div>
       </div>
 
       <div className="flex items-center justify-between mt-7 mb-3">
         <h3 className="text-[15.5px] font-semibold">{selected} — Entries</h3>
-        <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ Add Entry</button>
+        {!isReadOnly && (
+          <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ Add Entry</button>
+        )}
       </div>
 
-      <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
-        <table className="w-full min-w-[640px] text-[13px] border-collapse">
-          <thead>
-            <tr className="bg-[#FBF8F0]">
-              {['Date', 'Donor/Source', 'Amount', 'Purpose', 'Notes'].map(h => (
-                <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRows.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-10">No entries yet in this category.</td></tr>}
-            {filteredRows.map(r => (
-              <tr key={r.id}>
-                <td className="px-4 py-[11px] border-b border-border">{r.date}</td>
-                <td className="px-4 py-[11px] border-b border-border">{r.source}</td>
-                <td className="px-4 py-[11px] border-b border-border font-mono text-income">+Rs {Number(r.amount).toLocaleString('en-PK')}</td>
-                <td className="px-4 py-[11px] border-b border-border">{r.purpose || '-'}</td>
-                <td className="px-4 py-[11px] border-b border-border">{r.notes || '-'}</td>
+      {selected === FEES_KEY ? (
+        <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+          <table className="w-full min-w-[560px] text-[13px] border-collapse">
+            <thead>
+              <tr className="bg-[#FBF8F0]">
+                {['Paid On', 'Student', 'Month', 'Amount'].map(h => (
+                  <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {feesRows.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">No fees collected yet.</td></tr>}
+              {feesRows.map(f => (
+                <tr key={f.id}>
+                  <td className="px-4 py-[11px] border-b border-border">{f.paid_on || '-'}</td>
+                  <td className="px-4 py-[11px] border-b border-border">{f.students?.full_name || '-'}</td>
+                  <td className="px-4 py-[11px] border-b border-border">{f.month}</td>
+                  <td className="px-4 py-[11px] border-b border-border font-mono text-income">+Rs {Number(f.amount).toLocaleString('en-PK')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : selected === FUNDS_KEY ? (
+        <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+          <table className="w-full min-w-[560px] text-[13px] border-collapse">
+            <thead>
+              <tr className="bg-[#FBF8F0]">
+                {['Date', 'Source', 'Purpose', 'Amount'].map(h => (
+                  <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {fundsRows.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">No fund entries yet.</td></tr>}
+              {fundsRows.map(f => (
+                <tr key={f.id}>
+                  <td className="px-4 py-[11px] border-b border-border">{f.date}</td>
+                  <td className="px-4 py-[11px] border-b border-border">{f.source}</td>
+                  <td className="px-4 py-[11px] border-b border-border">{f.purpose || '-'}</td>
+                  <td className="px-4 py-[11px] border-b border-border font-mono text-income">+Rs {Number(f.amount).toLocaleString('en-PK')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+          <table className="w-full min-w-[640px] text-[13px] border-collapse">
+            <thead>
+              <tr className="bg-[#FBF8F0]">
+                {['Date', 'Donor/Source', 'Amount', 'Purpose', 'Notes'].map(h => (
+                  <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRows.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-10">No entries yet in this category.</td></tr>}
+              {filteredRows.map(r => (
+                <tr key={r.id}>
+                  <td className="px-4 py-[11px] border-b border-border">{r.date}</td>
+                  <td className="px-4 py-[11px] border-b border-border">{r.source}</td>
+                  <td className="px-4 py-[11px] border-b border-border font-mono text-income">+Rs {Number(r.amount).toLocaleString('en-PK')}</td>
+                  <td className="px-4 py-[11px] border-b border-border">{r.purpose || '-'}</td>
+                  <td className="px-4 py-[11px] border-b border-border">{r.notes || '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {showAdd && (
         <div className="fixed inset-0 bg-primary-dark/35 z-50 flex justify-end" onClick={() => setShowAdd(false)}>

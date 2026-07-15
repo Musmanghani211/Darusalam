@@ -8,6 +8,7 @@ type Teacher = {
   id: string
   full_name: string
   status: string
+  created_at: string
   teacher_details: { subject: string; monthly_salary: number } | null
 }
 
@@ -66,7 +67,7 @@ export default function TeachersClient({
         <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
-              {['Name', 'Subject', 'Students', ...(canManage ? ['Salary'] : []), 'Status', ...(canManage ? [''] : [])].map(h => (
+              {['Name', 'Subject', 'Students', 'Joined', ...(canManage ? ['Salary'] : []), 'Status', ...(canManage ? [''] : [])].map(h => (
                 <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
               ))}
             </tr>
@@ -80,6 +81,7 @@ export default function TeachersClient({
                 <td className="px-4 py-[11px] border-b border-border">{t.full_name}</td>
                 <td className="px-4 py-[11px] border-b border-border">{t.teacher_details?.subject || '-'}</td>
                 <td className="px-4 py-[11px] border-b border-border">{studentCounts[t.id] || 0}</td>
+                <td className="px-4 py-[11px] border-b border-border">{new Date(t.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                 {canManage && <td className="px-4 py-[11px] border-b border-border font-mono">Rs {Number(t.teacher_details?.monthly_salary || 0).toLocaleString('en-PK')}</td>}
                 <td className="px-4 py-[11px] border-b border-border">
                   <span className={`badge ${t.status === 'Active' ? 'bg-income-bg text-income' : 'bg-danger-bg text-danger'}`}>{t.status}</span>

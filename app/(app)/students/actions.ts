@@ -7,11 +7,14 @@ export async function addStudent(formData: FormData) {
   const supabase = await createClient()
 
   const full_name = String(formData.get('full_name') || '')
-  const admission_no = String(formData.get('admission_no') || '')
   const class_id = String(formData.get('class_id') || '') || null
   const teacher_id = String(formData.get('teacher_id') || '') || null
   const guardian_name = String(formData.get('guardian_name') || '')
   const phone = String(formData.get('phone') || '')
+
+  // Auto-generate admission number: STD-101, STD-102, ...
+  const { count } = await supabase.from('students').select('*', { count: 'exact', head: true })
+  const admission_no = `STD-${101 + (count || 0)}`
 
   const { error } = await supabase.from('students').insert({
     full_name, admission_no, class_id, teacher_id, guardian_name, phone,

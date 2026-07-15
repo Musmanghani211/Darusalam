@@ -34,7 +34,7 @@ export default function ExpensesClient({ rows, categories, loadError }: { rows: 
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">Couldn&apos;t load expenses: {loadError}</div>}
 
-      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4 gap-[14px]">
         {categories.map(c => (
           <div
             key={c}
