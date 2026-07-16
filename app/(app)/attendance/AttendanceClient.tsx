@@ -35,12 +35,13 @@ export default function AttendanceClient({
   const [detailStudent, setDetailStudent] = useState<Student | null>(null)
 
   const isToday = selectedDate === todayPKT()
+  const canEdit = isToday || role !== 'teacher'
   const presentStudents = students.filter(s => marks[`student-${s.id}`] === 'Present').length
   const absentStudents = students.filter(s => marks[`student-${s.id}`] === 'Absent')
   const presentTeachers = teachers.filter(t => marks[`teacher-${t.id}`] === 'Present').length
 
   function mark(type: 'student' | 'teacher', id: string, status: 'Present' | 'Absent') {
-    if (!isToday) return
+    if (!canEdit) return
     setMarks(prev => ({ ...prev, [`${type}-${id}`]: status }))
     startTransition(() => { markAttendance(type, id, status, selectedDate) })
   }
@@ -68,8 +69,11 @@ export default function AttendanceClient({
           <button onClick={() => router.push('/attendance')} className="text-[12px] text-primary underline">آج پر واپس جائیں</button>
         )}
       </div>
-      {!isToday && (
+      {!isToday && !canEdit && (
         <p className="text-[12px] text-muted mb-4">یہ گزری ہوئی تاریخ ہے — صرف دیکھنے کے لیے، حاضری تبدیل نہیں کی جا سکتی۔</p>
+      )}
+      {!isToday && canEdit && (
+        <p className="text-[12px] text-muted mb-4">یہ گزری ہوئی تاریخ ہے — بطور {role === 'mohtamim' ? 'مہتمم' : 'ناظم'} آپ اصلاح کے لیے تبدیل کر سکتے ہیں۔</p>
       )}
       {isToday && <div className="mb-4" />}
 
@@ -113,7 +117,7 @@ export default function AttendanceClient({
                   <td className="px-4 py-[11px] border-b border-border">{s.full_name}</td>
                   <td className="px-4 py-[11px] border-b border-border">{s.classes?.name || '-'}</td>
                   <td className="px-4 py-[11px] border-b border-border">
-                    {isToday ? (
+                    {canEdit ? (
                       <div className="flex gap-2">
                         <button onClick={() => mark('student', s.id, 'Present')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Present' ? 'bg-income-bg border-income text-income' : 'border-border text-muted'}`}>حاضر</button>
                         <button onClick={() => mark('student', s.id, 'Absent')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Absent' ? 'bg-danger-bg border-danger text-danger' : 'border-border text-muted'}`}>غائب</button>
@@ -155,7 +159,7 @@ export default function AttendanceClient({
                     <tr key={t.id}>
                       <td className="px-4 py-[11px] border-b border-border">{t.full_name}</td>
                       <td className="px-4 py-[11px] border-b border-border">
-                        {isToday ? (
+                        {canEdit ? (
                           <div className="flex gap-2">
                             <button onClick={() => mark('teacher', t.id, 'Present')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Present' ? 'bg-income-bg border-income text-income' : 'border-border text-muted'}`}>حاضر</button>
                             <button onClick={() => mark('teacher', t.id, 'Absent')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Absent' ? 'bg-danger-bg border-danger text-danger' : 'border-border text-muted'}`}>غائب</button>
