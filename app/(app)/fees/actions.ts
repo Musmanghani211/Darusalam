@@ -29,3 +29,10 @@ export async function addFeeEntry(formData: FormData) {
   revalidatePath('/fees')
   return { error: error?.message || null }
 }
+
+export async function deleteFeeEntry(feeId: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('fees').delete().eq('id', feeId)
+  revalidatePath('/fees')
+  return { error: error?.message || null }
+}

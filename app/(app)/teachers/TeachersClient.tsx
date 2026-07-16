@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
-import { addTeacher, toggleTeacherStatus, updateTeacher } from './actions'
+import { X, Trash2 } from 'lucide-react'
+import { addTeacher, toggleTeacherStatus, updateTeacher, deleteTeacher } from './actions'
 import { statusLabel } from '@/lib/labels'
 
 type Teacher = {
@@ -27,7 +27,18 @@ export default function TeachersClient({
   const [editError, setEditError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const canManage = role === 'mohtamim' || role === 'nazim'
+
+  async function handleDelete(t: Teacher) {
+    if (!confirm(`${t.full_name} کو مستقل طور پر حذف کریں؟`)) return
+    setBusyId(t.id)
+    setDeleteError(null)
+    const res = await deleteTeacher(t.id)
+    setBusyId(null)
+    if (res?.error) setDeleteError(res.error)
+  }
 
   async function handleEditSave(formData: FormData) {
     if (!editTarget) return
@@ -53,6 +64,11 @@ export default function TeachersClient({
       {loadError && (
         <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">
           اساتذہ لوڈ نہیں ہو سکے: {loadError}
+        </div>
+      )}
+      {deleteError && (
+        <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">
+          {deleteError}
         </div>
       )}
 
@@ -101,6 +117,13 @@ export default function TeachersClient({
                         className="text-[12px] border border-border rounded-[7px] px-[11px] py-[6px] hover:border-primary transition-colors"
                       >
                         {t.status === 'Active' ? 'معطل کریں' : 'فعال کریں'}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(t)}
+                        disabled={busyId === t.id}
+                        className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50"
+                      >
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>

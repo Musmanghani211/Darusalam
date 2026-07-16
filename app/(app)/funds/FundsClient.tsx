@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
-import { addFund } from './actions'
+import { X, Trash2 } from 'lucide-react'
+import { addFund, deleteFund } from './actions'
 
 type Row = { id: string; date: string; source: string; purpose: string | null; amount: number; notes: string | null }
 
@@ -10,6 +10,14 @@ export default function FundsClient({ rows, loadError }: { rows: Row[]; loadErro
   const [showAdd, setShowAdd] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
+
+  async function handleDelete(id: string) {
+    if (!confirm('یہ فنڈ اندراج حذف کریں؟')) return
+    setBusyId(id)
+    await deleteFund(id)
+    setBusyId(null)
+  }
 
   async function handleAdd(formData: FormData) {
     setSaving(true)
@@ -33,13 +41,13 @@ export default function FundsClient({ rows, loadError }: { rows: Row[]; loadErro
         <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
-              {['تاریخ', 'ذریعہ', 'مقصد', 'رقم', 'نوٹس'].map(h => (
+              {['تاریخ', 'ذریعہ', 'مقصد', 'رقم', 'نوٹس', ''].map(h => (
                 <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-10">ابھی کوئی فنڈ اندراج نہیں۔</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={6} className="text-center text-muted py-10">ابھی کوئی فنڈ اندراج نہیں۔</td></tr>}
             {rows.map(r => (
               <tr key={r.id}>
                 <td className="px-4 py-[11px] border-b border-border">{r.date}</td>
@@ -47,6 +55,11 @@ export default function FundsClient({ rows, loadError }: { rows: Row[]; loadErro
                 <td className="px-4 py-[11px] border-b border-border">{r.purpose || '-'}</td>
                 <td className="px-4 py-[11px] border-b border-border font-mono text-income">+Rs {Number(r.amount).toLocaleString('en-PK')}</td>
                 <td className="px-4 py-[11px] border-b border-border">{r.notes || '-'}</td>
+                <td className="px-4 py-[11px] border-b border-border">
+                  <button onClick={() => handleDelete(r.id)} disabled={busyId === r.id} className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50">
+                    <Trash2 size={14} />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

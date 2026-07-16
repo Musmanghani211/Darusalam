@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, X } from 'lucide-react'
-import { addStudent, updateStudent } from './actions'
+import { Search, X, Trash2 } from 'lucide-react'
+import { addStudent, updateStudent, deleteStudent } from './actions'
 import { statusLabel, feeStatusLabel } from '@/lib/labels'
 
 type Student = {
@@ -40,6 +40,18 @@ export default function StudentsClient({
   const [editClassId, setEditClassId] = useState('')
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  async function handleDeleteStudent(id: string) {
+    if (!confirm('یہ طالب علم اور اس کا تمام ریکارڈ (فیس، حاضری، پیش رفت) مستقل طور پر حذف کریں؟')) return
+    setDeletingId(id)
+    const res = await deleteStudent(id)
+    setDeletingId(null)
+    if (!res?.error) {
+      setSelected(null)
+      setEditMode(false)
+    }
+  }
   const [showAddForm, setShowAddForm] = useState(false)
   const [addClassId, setAddClassId] = useState('')
   const [saving, setSaving] = useState(false)
@@ -184,9 +196,18 @@ export default function StudentsClient({
                   <DlRow label="منزل" value={selected.manzil || '-'} />
                 </DlGroup>
                 {canManage && (
-                  <button onClick={() => { setEditMode(true); setEditClassId(selected.class_id || '') }} className="btn-primary bg-primary text-white rounded-[9px] py-[10px] w-full text-[13.5px] font-semibold hover:bg-primary-light transition-colors">
-                    طالب علم میں ترمیم کریں
-                  </button>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setEditMode(true); setEditClassId(selected.class_id || '') }} className="flex-1 bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors">
+                      طالب علم میں ترمیم کریں
+                    </button>
+                    <button
+                      onClick={() => handleDeleteStudent(selected.id)}
+                      disabled={deletingId === selected.id}
+                      className="w-[46px] flex items-center justify-center border border-danger text-danger rounded-[9px] hover:bg-danger-bg transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 )}
               </div>
             ) : (

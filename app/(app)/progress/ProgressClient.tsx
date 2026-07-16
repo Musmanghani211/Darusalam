@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { X, Plus, Eye } from 'lucide-react'
-import { addProgressEntry } from './actions'
+import { X, Plus, Eye, Trash2 } from 'lucide-react'
+import { addProgressEntry, deleteProgressEntry } from './actions'
 import { SURAHS, surahsForPara, ayatRangeForParaSurah, surahName } from '@/lib/quran-data'
 
 type Student = { id: string; full_name: string; classes: { name: string } | null; profiles?: { full_name: string } | null }
@@ -229,6 +229,14 @@ function ViewDetailsModal({ student, entries, onClose }: { student: Student; ent
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
   const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest')
+  const [busyId, setBusyId] = useState<string | null>(null)
+
+  async function handleDelete(id: string) {
+    if (!confirm('یہ اندراج حذف کریں؟')) return
+    setBusyId(id)
+    await deleteProgressEntry(id)
+    setBusyId(null)
+  }
 
   const filtered = useMemo(() => {
     let rows = entries
@@ -272,7 +280,12 @@ function ViewDetailsModal({ student, entries, onClose }: { student: Student; ent
             <div key={e.id} className="mb-3 pb-3 border-b border-dashed border-border last:border-0">
               <div className="flex justify-between items-center mb-1">
                 <span className="badge bg-[#FBF1DC] text-[#8A6A16]">{TYPE_LABEL[e.entry_type]}</span>
-                <span className="text-[11.5px] text-muted">{e.entry_date}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11.5px] text-muted">{e.entry_date}</span>
+                  <button onClick={() => handleDelete(e.id)} disabled={busyId === e.id} className="text-danger hover:bg-danger-bg rounded-[6px] p-[4px] disabled:opacity-50">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
               </div>
               <div className="text-[12.5px]">از: {refText(e.from_para, e.from_surah, e.from_ayat)}</div>
               <div className="text-[12.5px]">تا: {refText(e.to_para, e.to_surah, e.to_ayat)}</div>

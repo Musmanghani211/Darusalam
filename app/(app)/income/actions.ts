@@ -25,3 +25,10 @@ export async function addIncome(formData: FormData) {
   revalidatePath('/income')
   return { error: error?.message || null }
 }
+
+export async function deleteIncome(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('income').delete().eq('id', id)
+  revalidatePath('/income')
+  return { error: error?.message || null }
+}

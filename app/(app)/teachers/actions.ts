@@ -65,3 +65,24 @@ export async function updateTeacher(teacherId: string, formData: FormData) {
   revalidatePath('/teachers')
   return { error: detErr?.message || null }
 }
+
+export async function deleteTeacher(teacherId: string) {
+  const supabase = await createClient()
+
+  // unassign from classes/students first (these foreign keys are nullable)
+  await supabase.from('classes').update({ teacher_id: null }).eq('teacher_id', teacherId)
+  await supabase.from('students').update({ teacher_id: null }).eq('teacher_id', teacherId)
+  await supabase.from('teacher_details').delete().eq('teacher_id', teacherId)
+
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.deleteUser(teacherId)
+
+  if (error) {
+    return {
+      error: 'اس استاذ کو حذف نہیں کیا جا سکا — غالباً ان کا پرانا ریکارڈ (حاضری، تنخواہ کی سلپ، یا طلبہ کی پیش رفت) موجود ہے۔ اس صورت میں "معطل" کا آپشن استعمال کریں۔',
+    }
+  }
+
+  revalidatePath('/teachers')
+  return { error: null }
+}

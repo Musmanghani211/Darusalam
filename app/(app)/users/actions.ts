@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
@@ -36,4 +36,30 @@ export async function resetPassword(userId: string, newPassword: string) {
   const { error } = await admin.auth.admin.updateUserById(userId, { password: newPassword })
   revalidatePath('/users')
   return { error: error?.message || null }
+}
+
+export async function deleteUser(userId: string) {
+  const me = await getCurrentProfile()
+  if (me?.id === userId) {
+    return { error: 'آپ اپنا اکاؤنٹ خود حذف نہیں کر سکتے۔' }
+  }
+
+  const supabase = await createClient()
+
+  // unassign from classes/students if this user was a teacher
+  await supabase.from('classes').update({ teacher_id: null }).eq('teacher_id', userId)
+  await supabase.from('students').update({ teacher_id: null }).eq('teacher_id', userId)
+  await supabase.from('teacher_details').delete().eq('teacher_id', userId)
+
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.deleteUser(userId)
+
+  if (error) {
+    return {
+      error: 'اس صارف کو حذف نہیں کیا جا سکا — غالباً ان کا پرانا ریکارڈ (حاضری، تنخواہ، یا دیگر اندراجات) موجود ہے۔ اس صورت میں "معطل" کا آپشن استعمال کریں۔',
+    }
+  }
+
+  revalidatePath('/users')
+  return { error: null }
 }

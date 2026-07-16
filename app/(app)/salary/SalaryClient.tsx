@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
-import { generateSalary } from './actions'
+import { X, Trash2 } from 'lucide-react'
+import { generateSalary, deleteSalarySlip } from './actions'
 
 type Teacher = { id: string; full_name: string; teacher_details: { subject: string; monthly_salary: number } | null }
 type Slip = { id: string; teacher_id: string; month: string; basic_salary: number; deductions: number; net_paid: number; created_at: string }
@@ -12,6 +12,14 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
   const [historyFor, setHistoryFor] = useState<Teacher | null>(null)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
+
+  async function handleDeleteSlip(id: string) {
+    if (!confirm('یہ تنخواہ کی سلپ حذف کریں؟')) return
+    setBusyId(id)
+    await deleteSalarySlip(id)
+    setBusyId(null)
+  }
 
   async function handleGenerate(formData: FormData) {
     setSaving(true)
@@ -101,7 +109,12 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
               {historySlips.length === 0 && <p className="text-[13px] text-muted">ابھی کوئی سلپ نہیں بنی۔</p>}
               {historySlips.map(s => (
                 <div key={s.id} className="mb-4 pb-4 border-b border-dashed border-border last:border-0">
-                  <div className="font-semibold text-[13.5px] mb-2">{s.month}</div>
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="font-semibold text-[13.5px]">{s.month}</div>
+                    <button onClick={() => handleDeleteSlip(s.id)} disabled={busyId === s.id} className="text-danger hover:bg-danger-bg rounded-[7px] p-[5px] disabled:opacity-50">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                   <Row label="بنیادی تنخواہ" value={s.basic_salary} />
                   <Row label="کٹوتیاں" value={s.deductions} />
                   <Row label="ادا شدہ رقم" value={s.net_paid} />

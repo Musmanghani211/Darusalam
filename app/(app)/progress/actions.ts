@@ -33,3 +33,10 @@ export async function addProgressEntry(formData: FormData) {
   revalidatePath('/progress')
   return { error: error?.message || null }
 }
+
+export async function deleteProgressEntry(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('progress_entries').delete().eq('id', id)
+  revalidatePath('/progress')
+  return { error: error?.message || null }
+}

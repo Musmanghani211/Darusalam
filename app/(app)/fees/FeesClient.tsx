@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
-import { collectFee, addFeeEntry } from './actions'
+import { X, Trash2 } from 'lucide-react'
+import { collectFee, addFeeEntry, deleteFeeEntry } from './actions'
 import { feeStatusLabel } from '@/lib/labels'
 
 type Fee = {
@@ -24,6 +24,13 @@ export default function FeesClient({
   async function handleCollect(id: string) {
     setBusyId(id)
     await collectFee(id)
+    setBusyId(null)
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('یہ فیس ریکارڈ حذف کریں؟')) return
+    setBusyId(id)
+    await deleteFeeEntry(id)
     setBusyId(null)
   }
 
@@ -90,13 +97,13 @@ export default function FeesClient({
         <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
-              {['طالب علم', 'کلاس', 'مہینہ', 'رقم', 'ادائیگی کی تاریخ', 'حالت', ''].map(h => (
+              {['طالب علم', 'کلاس', 'مہینہ', 'رقم', 'ادائیگی کی تاریخ', 'حالت', '', ''].map(h => (
                 <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 && <tr><td colSpan={7} className="text-center text-muted py-10">ابھی یہاں کوئی فیس ریکارڈ نہیں۔</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={8} className="text-center text-muted py-10">ابھی یہاں کوئی فیس ریکارڈ نہیں۔</td></tr>}
             {filtered.map(f => (
               <tr key={f.id}>
                 <td className="px-4 py-[11px] border-b border-border">{f.students?.full_name || '-'}</td>
@@ -115,6 +122,11 @@ export default function FeesClient({
                   ) : (
                     <button onClick={() => printReceipt(f)} className="text-[12px] border border-border rounded-[7px] px-3 py-[6px]">رسید پرنٹ کریں</button>
                   )}
+                </td>
+                <td className="px-4 py-[11px] border-b border-border">
+                  <button onClick={() => handleDelete(f.id)} disabled={busyId === f.id} className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50">
+                    <Trash2 size={14} />
+                  </button>
                 </td>
               </tr>
             ))}

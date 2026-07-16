@@ -18,3 +18,10 @@ export async function addFund(formData: FormData) {
   revalidatePath('/funds')
   return { error: error?.message || null }
 }
+
+export async function deleteFund(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('other_funds').delete().eq('id', id)
+  revalidatePath('/funds')
+  return { error: error?.message || null }
+}

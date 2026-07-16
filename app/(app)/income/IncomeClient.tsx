@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { X } from 'lucide-react'
-import { addIncome } from './actions'
+import { X, Trash2 } from 'lucide-react'
+import { addIncome, deleteIncome } from './actions'
 import { incomeCategoryLabel } from '@/lib/labels'
 
 type Row = { id: string; category: string; date: string; source: string; amount: number; purpose: string | null; notes: string | null }
@@ -18,6 +18,7 @@ export default function IncomeClient({
   const allCards = [...categories, FEES_KEY, FUNDS_KEY]
   const [selected, setSelected] = useState(categories[0])
   const [showAdd, setShowAdd] = useState(false)
+  const [busyId, setBusyId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -33,6 +34,13 @@ export default function IncomeClient({
   const grandTotal = allCards.reduce((s, c) => s + (totals[c] || 0), 0)
   const isReadOnly = selected === FEES_KEY || selected === FUNDS_KEY
   const filteredRows = rows.filter(r => r.category === selected)
+
+  async function handleDelete(id: string) {
+    if (!confirm('یہ اندراج حذف کریں؟')) return
+    setBusyId(id)
+    await deleteIncome(id)
+    setBusyId(null)
+  }
 
   async function handleAdd(formData: FormData) {
     setSaving(true)
@@ -139,13 +147,13 @@ export default function IncomeClient({
           <table className="w-full min-w-[640px] text-[13px] border-collapse">
             <thead>
               <tr className="bg-[#FBF8F0]">
-                {['تاریخ', 'عطیہ دہندہ/ذریعہ', 'رقم', 'مقصد', 'نوٹس'].map(h => (
+                {['تاریخ', 'عطیہ دہندہ/ذریعہ', 'رقم', 'مقصد', 'نوٹس', ''].map(h => (
                   <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filteredRows.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-10">اس زمرے میں ابھی کوئی اندراج نہیں۔</td></tr>}
+              {filteredRows.length === 0 && <tr><td colSpan={6} className="text-center text-muted py-10">اس زمرے میں ابھی کوئی اندراج نہیں۔</td></tr>}
               {filteredRows.map(r => (
                 <tr key={r.id}>
                   <td className="px-4 py-[11px] border-b border-border">{r.date}</td>
@@ -153,6 +161,11 @@ export default function IncomeClient({
                   <td className="px-4 py-[11px] border-b border-border font-mono text-income">+Rs {Number(r.amount).toLocaleString('en-PK')}</td>
                   <td className="px-4 py-[11px] border-b border-border">{r.purpose || '-'}</td>
                   <td className="px-4 py-[11px] border-b border-border">{r.notes || '-'}</td>
+                  <td className="px-4 py-[11px] border-b border-border">
+                    <button onClick={() => handleDelete(r.id)} disabled={busyId === r.id} className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50">
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

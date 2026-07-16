@@ -35,3 +35,32 @@ export async function generateSalary(formData: FormData) {
   revalidatePath('/dashboard')
   return { error: null }
 }
+
+export async function deleteSalarySlip(slipId: string) {
+  const supabase = await createClient()
+
+  const { data: slip } = await supabase
+    .from('salary_slips')
+    .select('teacher_id, month, net_paid, profiles(full_name)')
+    .eq('id', slipId)
+    .single()
+
+  const { error } = await supabase.from('salary_slips').delete().eq('id', slipId)
+  if (error) return { error: error.message }
+
+  // Best-effort: remove the matching auto-generated expense entry too
+  if (slip) {
+    const teacherName = Array.isArray((slip as any).profiles) ? (slip as any).profiles[0]?.full_name : (slip as any).profiles?.full_name
+    const expectedNotes = `Salary slip — ${teacherName || 'Teacher'} — ${slip.month}`
+    await supabase.from('expenses')
+      .delete()
+      .eq('category', 'Salaries')
+      .eq('amount', slip.net_paid)
+      .eq('notes', expectedNotes)
+  }
+
+  revalidatePath('/salary')
+  revalidatePath('/expenses')
+  revalidatePath('/dashboard')
+  return { error: null }
+}

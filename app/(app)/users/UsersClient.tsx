@@ -1,19 +1,29 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
-import { createUser, toggleUserStatus, resetPassword } from './actions'
+import { X, Trash2 } from 'lucide-react'
+import { createUser, toggleUserStatus, resetPassword, deleteUser } from './actions'
 import { statusLabel, roleNameLabel } from '@/lib/labels'
 
 type User = { id: string; full_name: string; role: string; status: string }
 
-export default function UsersClient({ users, loadError }: { users: User[]; loadError?: string }) {
+export default function UsersClient({ users, currentUserId, loadError }: { users: User[]; currentUserId: string; loadError?: string }) {
   const [showAdd, setShowAdd] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [resetTarget, setResetTarget] = useState<User | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  async function handleDelete(u: User) {
+    if (!confirm(`${u.full_name} کو مستقل طور پر حذف کریں؟`)) return
+    setBusyId(u.id)
+    setDeleteError(null)
+    const res = await deleteUser(u.id)
+    setBusyId(null)
+    if (res?.error) setDeleteError(res.error)
+  }
 
   async function handleAdd(formData: FormData) {
     setSaving(true)
@@ -42,6 +52,7 @@ export default function UsersClient({ users, loadError }: { users: User[]; loadE
   return (
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">صارفین لوڈ نہیں ہو سکے: {loadError}</div>}
+      {deleteError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">{deleteError}</div>}
 
       <div className="flex justify-end mb-4">
         <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ صارف بنائیں</button>
@@ -68,6 +79,11 @@ export default function UsersClient({ users, loadError }: { users: User[]; loadE
                     <button onClick={() => handleToggle(u)} disabled={busyId === u.id} className="text-[12px] border border-border rounded-[7px] px-[11px] py-[6px] hover:border-primary transition-colors disabled:opacity-50">
                       {u.status === 'Active' ? 'معطل کریں' : 'فعال کریں'}
                     </button>
+                    {u.id !== currentUserId && (
+                      <button onClick={() => handleDelete(u)} disabled={busyId === u.id} className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50">
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

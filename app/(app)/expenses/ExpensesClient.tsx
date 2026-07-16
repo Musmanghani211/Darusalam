@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { X } from 'lucide-react'
-import { addExpense } from './actions'
+import { X, Trash2 } from 'lucide-react'
+import { addExpense, deleteExpense } from './actions'
 import { expenseCategoryLabel } from '@/lib/labels'
 
 type Row = { id: string; category: string; date: string; amount: number; notes: string | null; profiles: { full_name: string } | null }
@@ -12,6 +12,7 @@ export default function ExpensesClient({ rows, categories, loadError }: { rows: 
   const [showAdd, setShowAdd] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
 
   const totals = useMemo(() => {
     const map: Record<string, number> = {}
@@ -21,6 +22,13 @@ export default function ExpensesClient({ rows, categories, loadError }: { rows: 
   }, [rows, categories])
 
   const filteredRows = rows.filter(r => r.category === selected)
+
+  async function handleDelete(id: string) {
+    if (!confirm('یہ اندراج حذف کریں؟')) return
+    setBusyId(id)
+    await deleteExpense(id)
+    setBusyId(null)
+  }
 
   async function handleAdd(formData: FormData) {
     setSaving(true)
@@ -57,13 +65,13 @@ export default function ExpensesClient({ rows, categories, loadError }: { rows: 
         <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
-              {['تاریخ', 'زمرہ', 'رقم', 'ادا کنندہ', 'نوٹس'].map(h => (
+              {['تاریخ', 'زمرہ', 'رقم', 'ادا کنندہ', 'نوٹس', ''].map(h => (
                 <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {filteredRows.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-10">اس زمرے میں ابھی کوئی اندراج نہیں۔</td></tr>}
+            {filteredRows.length === 0 && <tr><td colSpan={6} className="text-center text-muted py-10">اس زمرے میں ابھی کوئی اندراج نہیں۔</td></tr>}
             {filteredRows.map(r => (
               <tr key={r.id}>
                 <td className="px-4 py-[11px] border-b border-border">{r.date}</td>
@@ -71,6 +79,11 @@ export default function ExpensesClient({ rows, categories, loadError }: { rows: 
                 <td className="px-4 py-[11px] border-b border-border font-mono text-danger">-Rs {Number(r.amount).toLocaleString('en-PK')}</td>
                 <td className="px-4 py-[11px] border-b border-border">{r.profiles?.full_name || '-'}</td>
                 <td className="px-4 py-[11px] border-b border-border">{r.notes || '-'}</td>
+                <td className="px-4 py-[11px] border-b border-border">
+                  <button onClick={() => handleDelete(r.id)} disabled={busyId === r.id} className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50">
+                    <Trash2 size={14} />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -48,3 +48,17 @@ export async function updateStudent(studentId: string, formData: FormData) {
   revalidatePath('/students')
   return { error: error?.message || null }
 }
+
+export async function deleteStudent(studentId: string) {
+  const supabase = await createClient()
+
+  // remove dependent records first (no cascade set on these foreign keys)
+  await supabase.from('attendance').delete().eq('student_id', studentId)
+  await supabase.from('fees').delete().eq('student_id', studentId)
+  await supabase.from('progress_entries').delete().eq('student_id', studentId)
+
+  const { error } = await supabase.from('students').delete().eq('id', studentId)
+
+  revalidatePath('/students')
+  return { error: error?.message || null }
+}
