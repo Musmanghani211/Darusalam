@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import { collectFee, addFeeEntry, deleteFeeEntry } from './actions'
 import { feeStatusLabel } from '@/lib/labels'
+import { monthOptions, currentMonthLabel } from '@/lib/months'
 
 type Fee = {
   id: string; month: string; amount: number; status: string; paid_on: string | null
@@ -152,7 +153,9 @@ export default function FeesClient({
               </div>
               <div>
                 <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">مہینہ</label>
-                <input name="month" placeholder="مثلاً اگست 2026" required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+                <select name="month" defaultValue={currentMonthLabel()} required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+                  {monthOptions().map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
               </div>
               <div>
                 <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">رقم</label>

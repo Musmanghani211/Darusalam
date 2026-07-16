@@ -13,7 +13,7 @@ export const pageMeta: Record<string, { title: string; crumb: string }> = {
   '/settings': { title: 'ترتیبات', crumb: 'سسٹم کی ترجیحات' },
   '/funds': { title: 'دیگر فنڈز', crumb: 'دستی طور پر شامل کردہ رقوم' },
   '/progress': { title: 'طلبہ کی پیش رفت', crumb: 'سبق، سبقی اور منزل' },
-  '/profile': { title: 'میری پروفائل', crumb: 'کلاس، طلبہ اور تنخواہ کی سلپ' },
+  '/profile': { title: 'میری پروفائل', crumb: 'کلاس، طلبہ اور تنخواہ سلپ' },
 }
 
 export function metaFor(pathname: string) {

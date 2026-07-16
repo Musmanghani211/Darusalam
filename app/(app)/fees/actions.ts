@@ -24,6 +24,17 @@ export async function addFeeEntry(formData: FormData) {
   const month = String(formData.get('month') || '')
   const amount = Number(formData.get('amount') || 0)
 
+  const { data: existing } = await supabase
+    .from('fees')
+    .select('id')
+    .eq('student_id', student_id)
+    .eq('month', month)
+    .maybeSingle()
+
+  if (existing) {
+    return { error: 'اس طالب علم کی اس مہینے کی فیس پہلے سے موجود ہے۔' }
+  }
+
   const { error } = await supabase.from('fees').insert({ student_id, month, amount })
 
   revalidatePath('/fees')

@@ -8,7 +8,7 @@ export default async function ProfilePage() {
   const { count: myStudents } = await supabase.from('students').select('*', { count: 'exact', head: true }).eq('teacher_id', profile?.id)
   const { data: classes } = await supabase.from('classes').select('name').eq('teacher_id', profile?.id)
   const { data: latestSlip } = await supabase
-    .from('salary_slips').select('month, basic_salary, deductions, net_paid')
+    .from('salary_slips').select('month, basic_salary, bonus, deductions, advance_deducted, net_paid')
     .eq('teacher_id', profile?.id).order('created_at', { ascending: false }).limit(1).single()
 
   const classNames = (classes || []).map((c: any) => c.name).join(', ') || 'ابھی مقرر نہیں'
@@ -23,27 +23,31 @@ export default async function ProfilePage() {
       </div>
       <div className="bg-surface border border-border rounded-card shadow-sm p-[16px_18px]">
         <h4 className="text-[11.5px] uppercase tracking-wide text-muted font-semibold mb-[10px]">
-          تنخواہ کی سلپ {latestSlip ? `— ${latestSlip.month}` : ''}
+          تنخواہ سلپ {latestSlip ? `— ${latestSlip.month}` : ''}
         </h4>
         {latestSlip ? (
           <>
             <Row label="بنیادی تنخواہ" value={latestSlip.basic_salary} />
-            <Row label="کٹوتیاں" value={latestSlip.deductions} />
-            <Row label="ادا شدہ رقم" value={latestSlip.net_paid} />
+            {latestSlip.bonus > 0 && <Row label="بونس" value={latestSlip.bonus} positive />}
+            {latestSlip.deductions > 0 && <Row label="کٹوتیاں" value={latestSlip.deductions} negative />}
+            {latestSlip.advance_deducted > 0 && <Row label="ایڈوانس کاٹا گیا" value={latestSlip.advance_deducted} negative />}
+            <Row label="ادا شدہ رقم" value={latestSlip.net_paid} bold />
           </>
         ) : (
-          <p className="text-[12.5px] text-muted">ابھی کوئی تنخواہ کی سلپ نہیں بنی۔</p>
+          <p className="text-[12.5px] text-muted">ابھی کوئی تنخواہ سلپ نہیں بنی۔</p>
         )}
       </div>
     </div>
   )
 }
 
-function Row({ label, value }: { label: string; value: number }) {
+function Row({ label, value, positive, negative, bold }: { label: string; value: number; positive?: boolean; negative?: boolean; bold?: boolean }) {
   return (
-    <div className="flex justify-between py-[7px] border-b border-dashed border-border text-[13px]">
+    <div className={`flex justify-between py-[7px] border-b border-dashed border-border text-[13px] ${bold ? 'font-semibold' : ''}`}>
       <span className="text-muted">{label}</span>
-      <span className="font-semibold font-mono">Rs {Number(value).toLocaleString('en-PK')}</span>
+      <span className={`font-mono ${positive ? 'text-income' : negative ? 'text-danger' : 'font-semibold'}`}>
+        {positive ? '+' : negative ? '-' : ''}Rs {Number(value).toLocaleString('en-PK')}
+      </span>
     </div>
   )
 }

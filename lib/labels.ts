@@ -14,7 +14,7 @@ export const feeStatusLabel: Record<string, string> = {
 
 export const attendanceLabel: Record<string, string> = {
   Present: 'حاضر',
-  Absent: 'غائب',
+  Absent: 'غیر حاضر',
 }
 
 export const incomeCategoryLabel: Record<string, string> = {
