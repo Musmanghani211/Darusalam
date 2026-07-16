@@ -3,8 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // Which sections each role is allowed into.
 const roleAccess: Record<string, string[]> = {
-  mohtamim: ['/dashboard', '/students', '/teachers', '/classes', '/attendance', '/fees', '/salary', '/income', '/expenses', '/reports', '/users', '/settings'],
-  nazim: ['/dashboard', '/students', '/teachers', '/classes', '/attendance', '/fees', '/salary', '/funds', '/settings'],
+  mohtamim: ['/dashboard', '/students', '/teachers', '/classes', '/attendance', '/fees', '/salary', '/income', '/expenses', '/reports', '/progress', '/users', '/settings'],
+  nazim: ['/dashboard', '/students', '/teachers', '/classes', '/attendance', '/fees', '/salary', '/progress', '/funds', '/settings'],
   teacher: ['/dashboard', '/attendance', '/progress', '/profile'],
 }
 

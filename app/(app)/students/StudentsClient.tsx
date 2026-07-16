@@ -29,7 +29,7 @@ export default function StudentsClient({
 }: {
   role: string
   students: Student[]
-  classes: { id: string; name: string }[]
+  classes: { id: string; name: string; teacher_id: string | null }[]
   teachers: { id: string; full_name: string }[]
   feesByStudent: { student_id: string; status: string }[]
   loadError?: string
@@ -37,9 +37,11 @@ export default function StudentsClient({
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Student | null>(null)
   const [editMode, setEditMode] = useState(false)
+  const [editClassId, setEditClassId] = useState('')
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [addClassId, setAddClassId] = useState('')
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -104,7 +106,7 @@ export default function StudentsClient({
         </div>
         {canManage && (
           <button
-            onClick={() => setShowAddForm(true)}
+            onClick={() => { setShowAddForm(true); setAddClassId('') }}
             className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors"
           >
             + نیا داخلہ
@@ -182,7 +184,7 @@ export default function StudentsClient({
                   <DlRow label="منزل" value={selected.manzil || '-'} />
                 </DlGroup>
                 {canManage && (
-                  <button onClick={() => setEditMode(true)} className="btn-primary bg-primary text-white rounded-[9px] py-[10px] w-full text-[13.5px] font-semibold hover:bg-primary-light transition-colors">
+                  <button onClick={() => { setEditMode(true); setEditClassId(selected.class_id || '') }} className="btn-primary bg-primary text-white rounded-[9px] py-[10px] w-full text-[13.5px] font-semibold hover:bg-primary-light transition-colors">
                     طالب علم میں ترمیم کریں
                   </button>
                 )}
@@ -212,17 +214,26 @@ export default function StudentsClient({
                 </div>
                 <div>
                   <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">کلاس</label>
-                  <select name="class_id" defaultValue={selected.class_id || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+                  <select name="class_id" value={editClassId} onChange={e => setEditClassId(e.target.value)} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
                     <option value="">کلاس منتخب کریں</option>
                     {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">مقرر استاذ</label>
-                  <select name="teacher_id" defaultValue={selected.teacher_id || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
-                    <option value="">استاذ منتخب کریں</option>
-                    {teachers.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
-                  </select>
+                  {(() => {
+                    const cls = classes.find(c => c.id === editClassId)
+                    const options = cls?.teacher_id ? teachers.filter(t => t.id === cls.teacher_id) : teachers
+                    return (
+                      <select key={editClassId} name="teacher_id" defaultValue={cls?.teacher_id || selected.teacher_id || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+                        <option value="">استاذ منتخب کریں</option>
+                        {options.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
+                      </select>
+                    )
+                  })()}
+                  {editClassId && !classes.find(c => c.id === editClassId)?.teacher_id && (
+                    <p className="text-[11px] text-muted mt-1">اس کلاس کے ساتھ ابھی کوئی استاذ منسلک نہیں — پہلے Classes میں جا کر استاذ مقرر کریں۔</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">حالت</label>
@@ -263,17 +274,26 @@ export default function StudentsClient({
 
               <div>
                 <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">کلاس</label>
-                <select name="class_id" className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+                <select name="class_id" value={addClassId} onChange={e => setAddClassId(e.target.value)} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
                   <option value="">کلاس منتخب کریں</option>
                   {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">مقرر استاذ</label>
-                <select name="teacher_id" className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
-                  <option value="">استاذ منتخب کریں</option>
-                  {teachers.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
-                </select>
+                {(() => {
+                  const cls = classes.find(c => c.id === addClassId)
+                  const options = cls?.teacher_id ? teachers.filter(t => t.id === cls.teacher_id) : teachers
+                  return (
+                    <select key={addClassId} name="teacher_id" defaultValue={cls?.teacher_id || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+                      <option value="">استاذ منتخب کریں</option>
+                      {options.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
+                    </select>
+                  )
+                })()}
+                {addClassId && !classes.find(c => c.id === addClassId)?.teacher_id && (
+                  <p className="text-[11px] text-muted mt-1">اس کلاس کے ساتھ ابھی کوئی استاذ منسلک نہیں — پہلے Classes میں جا کر استاذ مقرر کریں۔</p>
+                )}
               </div>
 
               <button

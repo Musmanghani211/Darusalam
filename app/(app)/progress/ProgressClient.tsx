@@ -5,7 +5,7 @@ import { X, Plus, Eye } from 'lucide-react'
 import { addProgressEntry } from './actions'
 import { SURAHS, surahsForPara, ayatRangeForParaSurah, surahName } from '@/lib/quran-data'
 
-type Student = { id: string; full_name: string; classes: { name: string } | null }
+type Student = { id: string; full_name: string; classes: { name: string } | null; profiles?: { full_name: string } | null }
 type AttRow = { student_id: string; status: string }
 type Entry = {
   id: string; student_id: string; entry_type: string
@@ -22,8 +22,8 @@ function refText(para: number, surah: number, ayat: number) {
 }
 
 export default function ProgressClient({
-  students, todayAttendance, entries, today,
-}: { students: Student[]; todayAttendance: AttRow[]; entries: Entry[]; today: string }) {
+  students, todayAttendance, entries, today, showTeacherColumn, loadError,
+}: { students: Student[]; todayAttendance: AttRow[]; entries: Entry[]; today: string; showTeacherColumn?: boolean; loadError?: string }) {
   const [addFor, setAddFor] = useState<Student | null>(null)
   const [viewFor, setViewFor] = useState<Student | null>(null)
 
@@ -39,6 +39,12 @@ export default function ProgressClient({
 
   return (
     <>
+      {loadError && (
+        <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">
+          طلبہ لوڈ نہیں ہو سکے: {loadError}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 min-[480px]:grid-cols-2 gap-[14px] mb-6">
         <div className="bg-surface border border-border rounded-card p-[16px_18px] shadow-sm">
           <div className="text-[11.5px] text-muted font-semibold">کل طلبہ</div>
@@ -54,13 +60,13 @@ export default function ProgressClient({
         <table className="w-full min-w-[720px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
-              {['نام', 'کلاس', 'آج کی حاضری', 'سبق', 'سبقی', 'منزل', ''].map(h => (
+              {[...(showTeacherColumn ? ['استاذ'] : []), 'نام', 'کلاس', 'آج کی حاضری', 'سبق', 'سبقی', 'منزل', ''].map(h => (
                 <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {students.length === 0 && <tr><td colSpan={7} className="text-center text-muted py-10">ابھی آپ کو کوئی طالب علم تفویض نہیں۔</td></tr>}
+            {students.length === 0 && <tr><td colSpan={showTeacherColumn ? 8 : 7} className="text-center text-muted py-10">ابھی کوئی طالب علم نہیں۔</td></tr>}
             {students.map(s => {
               const isAbsent = absentIds.has(s.id)
               const sabaq = latestFor(s.id, 'Sabaq')
@@ -68,6 +74,7 @@ export default function ProgressClient({
               const manzil = latestFor(s.id, 'Manzil')
               return (
                 <tr key={s.id}>
+                  {showTeacherColumn && <td className="px-4 py-[11px] border-b border-border">{s.profiles?.full_name || '-'}</td>}
                   <td className="px-4 py-[11px] border-b border-border font-semibold">{s.full_name}</td>
                   <td className="px-4 py-[11px] border-b border-border">{s.classes?.name || '-'}</td>
                   <td className="px-4 py-[11px] border-b border-border">
