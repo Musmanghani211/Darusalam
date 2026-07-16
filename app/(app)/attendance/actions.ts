@@ -24,3 +24,15 @@ export async function markAttendance(
   revalidatePath('/attendance')
   return { error: error?.message || null }
 }
+
+export async function getStudentAttendanceHistory(studentId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('attendance')
+    .select('date, status')
+    .eq('student_id', studentId)
+    .eq('person_type', 'student')
+    .order('date', { ascending: false })
+
+  return { rows: data || [], error: error?.message || null }
+}
