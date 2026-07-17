@@ -4,6 +4,15 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { todayPKT } from '@/lib/date'
 
+function revalidateAll() {
+  revalidatePath('/students')
+  revalidatePath('/teachers')
+  revalidatePath('/classes')
+  revalidatePath('/progress')
+  revalidatePath('/attendance')
+  revalidatePath('/dashboard')
+}
+
 export async function addStudent(formData: FormData) {
   const supabase = await createClient()
 
@@ -25,7 +34,7 @@ export async function addStudent(formData: FormData) {
     return { error: error.message }
   }
 
-  revalidatePath('/students')
+  revalidateAll()
   return { error: null }
 }
 
@@ -45,7 +54,7 @@ export async function updateStudent(studentId: string, formData: FormData) {
     full_name, class_id, teacher_id, guardian_name, phone, cnic_or_bform, address, status,
   }).eq('id', studentId)
 
-  revalidatePath('/students')
+  revalidateAll()
   return { error: error?.message || null }
 }
 
@@ -59,6 +68,6 @@ export async function deleteStudent(studentId: string) {
 
   const { error } = await supabase.from('students').delete().eq('id', studentId)
 
-  revalidatePath('/students')
+  revalidateAll()
   return { error: error?.message || null }
 }

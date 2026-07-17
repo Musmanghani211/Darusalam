@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { X, Trash2 } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { X, Trash2, Search } from 'lucide-react'
 import { addFund, deleteFund } from './actions'
 
 type Row = { id: string; date: string; source: string; purpose: string | null; amount: number; notes: string | null }
@@ -11,6 +11,18 @@ export default function FundsClient({ rows, loadError }: { rows: Row[]; loadErro
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest')
+
+  const visibleRows = useMemo(() => {
+    let r = rows
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      r = r.filter(x => x.source.toLowerCase().includes(q) || (x.purpose || '').toLowerCase().includes(q) || (x.notes || '').toLowerCase().includes(q))
+    }
+    r = [...r].sort((a, b) => sortOrder === 'latest' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date))
+    return r
+  }, [rows, search, sortOrder])
 
   async function handleDelete(id: string) {
     if (!confirm('یہ فنڈ اندراج حذف کریں؟')) return
@@ -32,9 +44,25 @@ export default function FundsClient({ rows, loadError }: { rows: Row[]; loadErro
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">فنڈز لوڈ نہیں ہو سکے: {loadError}</div>}
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <p className="text-[13px] text-muted">دستی طور پر شامل کردہ فنڈ اندراجات — مہتمم کو بھی نظر آتے ہیں۔</p>
         <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ فنڈ شامل کریں</button>
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap mb-3">
+        <div className="relative">
+          <Search size={15} className="absolute left-[11px] top-[9px] text-muted" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="تلاش کریں..."
+            className="pl-[34px] pr-[14px] py-[8px] border border-border rounded-[9px] text-[12.5px] w-[200px] bg-surface"
+          />
+        </div>
+        <select value={sortOrder} onChange={e => setSortOrder(e.target.value as any)} className="px-2 py-[8px] border border-border rounded-[9px] text-[12.5px] bg-surface">
+          <option value="latest">تازہ ترین پہلے</option>
+          <option value="oldest">پرانے پہلے</option>
+        </select>
       </div>
 
       <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
@@ -47,8 +75,8 @@ export default function FundsClient({ rows, loadError }: { rows: Row[]; loadErro
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && <tr><td colSpan={6} className="text-center text-muted py-10">ابھی کوئی فنڈ اندراج نہیں۔</td></tr>}
-            {rows.map(r => (
+            {visibleRows.length === 0 && <tr><td colSpan={6} className="text-center text-muted py-10">ابھی کوئی فنڈ اندراج نہیں۔</td></tr>}
+            {visibleRows.map(r => (
               <tr key={r.id}>
                 <td className="px-4 py-[11px] border-b border-border">{r.date}</td>
                 <td className="px-4 py-[11px] border-b border-border">{r.source}</td>

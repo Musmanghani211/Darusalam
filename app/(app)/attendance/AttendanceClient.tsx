@@ -86,7 +86,7 @@ export default function AttendanceClient({
           onClick={() => absentStudents.length > 0 && setShowAbsent(true)}
           className={`bg-surface border rounded-card p-[16px_18px] shadow-sm ${absentStudents.length > 0 ? 'cursor-pointer hover:border-danger border-border' : 'border-border'}`}
         >
-          <div className="text-[11.5px] text-muted font-semibold uppercase tracking-wide">غائب طلبہ</div>
+          <div className="text-[11.5px] text-muted font-semibold uppercase tracking-wide">غیر حاضر طلبہ</div>
           <div className="font-display font-mono text-[26px] font-semibold mt-[6px] text-danger">{absentStudents.length}</div>
           {absentStudents.length > 0 && <div className="text-[11px] text-muted mt-1">دیکھنے اور اطلاع کے لیے تھپتھپائیں</div>}
         </div>
@@ -120,11 +120,11 @@ export default function AttendanceClient({
                     {canEdit ? (
                       <div className="flex gap-2">
                         <button onClick={() => mark('student', s.id, 'Present')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Present' ? 'bg-income-bg border-income text-income' : 'border-border text-muted'}`}>حاضر</button>
-                        <button onClick={() => mark('student', s.id, 'Absent')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Absent' ? 'bg-danger-bg border-danger text-danger' : 'border-border text-muted'}`}>غائب</button>
+                        <button onClick={() => mark('student', s.id, 'Absent')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Absent' ? 'bg-danger-bg border-danger text-danger' : 'border-border text-muted'}`}>غیر حاضر</button>
                       </div>
                     ) : (
                       <span className={`badge ${status === 'Present' ? 'bg-income-bg text-income' : status === 'Absent' ? 'bg-danger-bg text-danger' : 'bg-[#EFEEE7] text-muted'}`}>
-                        {status === 'Present' ? 'حاضر' : status === 'Absent' ? 'غائب' : 'درج نہیں'}
+                        {status === 'Present' ? 'حاضر' : status === 'Absent' ? 'غیر حاضر' : 'درج نہیں'}
                       </span>
                     )}
                   </td>
@@ -162,11 +162,11 @@ export default function AttendanceClient({
                         {canEdit ? (
                           <div className="flex gap-2">
                             <button onClick={() => mark('teacher', t.id, 'Present')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Present' ? 'bg-income-bg border-income text-income' : 'border-border text-muted'}`}>حاضر</button>
-                            <button onClick={() => mark('teacher', t.id, 'Absent')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Absent' ? 'bg-danger-bg border-danger text-danger' : 'border-border text-muted'}`}>غائب</button>
+                            <button onClick={() => mark('teacher', t.id, 'Absent')} className={`text-[12px] rounded-[7px] px-3 py-[5px] border ${status === 'Absent' ? 'bg-danger-bg border-danger text-danger' : 'border-border text-muted'}`}>غیر حاضر</button>
                           </div>
                         ) : (
                           <span className={`badge ${status === 'Present' ? 'bg-income-bg text-income' : status === 'Absent' ? 'bg-danger-bg text-danger' : 'bg-[#EFEEE7] text-muted'}`}>
-                            {status === 'Present' ? 'حاضر' : status === 'Absent' ? 'غائب' : 'درج نہیں'}
+                            {status === 'Present' ? 'حاضر' : status === 'Absent' ? 'غیر حاضر' : 'درج نہیں'}
                           </span>
                         )}
                       </td>
@@ -183,7 +183,7 @@ export default function AttendanceClient({
         <div className="fixed inset-0 bg-primary-dark/35 z-50 flex justify-end" onClick={() => setShowAbsent(false)}>
           <div className="w-[420px] max-w-[92vw] bg-surface h-full overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-5 border-b border-border flex justify-between items-start sticky top-0 bg-surface">
-              <h3 className="font-display text-[17px] font-semibold">غائب طلبہ</h3>
+              <h3 className="font-display text-[17px] font-semibold">غیر حاضر طلبہ</h3>
               <button onClick={() => setShowAbsent(false)} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
             </div>
             <div className="px-6 py-[18px]">
@@ -291,7 +291,7 @@ function StudentDetailModal({ student, onClose }: { student: Student; onClose: (
           {filteredRows.map((r, i) => (
             <div key={i} className="flex justify-between py-[9px] border-b border-dashed border-border last:border-0 text-[13px]">
               <span>{r.date}</span>
-              <span className={`badge ${r.status === 'Present' ? 'bg-income-bg text-income' : 'bg-danger-bg text-danger'}`}>{r.status === 'Present' ? 'حاضر' : 'غائب'}</span>
+              <span className={`badge ${r.status === 'Present' ? 'bg-income-bg text-income' : 'bg-danger-bg text-danger'}`}>{r.status === 'Present' ? 'حاضر' : 'غیر حاضر'}</span>
             </div>
           ))}
         </div>

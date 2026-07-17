@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { X } from 'lucide-react'
 import { fmtMoney, SectionTitle, RowLine, EmptyRow } from '@/components/ReportRow'
 import { statusLabel } from '@/lib/labels'
@@ -50,6 +50,27 @@ export default function DashboardClient({
   const balance = totalIncomeAllTime - totalExpenseAllTime
 
   const newAdmissions = students.filter(s => s.admission_date >= monthStart)
+
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  const monthlyRows = useMemo(() => {
+    const today = new Date(monthStart + 'T00:00:00')
+    const rows = []
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
+      const label = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+
+      const feesCollected = fees.filter((f: any) => f.month === label && f.status === 'Paid').reduce((s: number, r: any) => s + Number(r.amount), 0)
+      const feesPending = fees.filter((f: any) => f.month === label && f.status === 'Pending').reduce((s: number, r: any) => s + Number(r.amount), 0)
+      const incomeThisMonth = income.filter((r: any) => r.date?.startsWith(ym)).reduce((s: number, r: any) => s + Number(r.amount), 0)
+        + funds.filter((r: any) => r.date?.startsWith(ym)).reduce((s: number, r: any) => s + Number(r.amount), 0)
+        + feesCollected
+      const expenseThisMonth = expenses.filter((r: any) => r.date?.startsWith(ym)).reduce((s: number, r: any) => s + Number(r.amount), 0)
+
+      rows.push({ label, feesCollected, feesPending, income: incomeThisMonth, expense: expenseThisMonth, balance: incomeThisMonth - expenseThisMonth })
+    }
+    return rows
+  }, [fees, income, funds, expenses, monthStart])
 
   const studentAttendance = attendanceToday.filter(a => a.person_type === 'student')
   const teacherAttendance = attendanceToday.filter(a => a.person_type === 'teacher')
@@ -112,6 +133,35 @@ export default function DashboardClient({
         <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-[14px]">
           <Card id="myStudents" label="میرے طلبہ" value={String(myStudents.length)} />
           <Card id="myAttendance" label="آج کی حاضری" value={`${myPresent.length} / ${myStudents.length}`} />
+        </div>
+      )}
+
+      {(role === 'mohtamim' || role === 'nazim') && (
+        <div className="mt-7">
+          <h3 className="text-[15.5px] font-semibold mb-3">ماہانہ تجزیہ — پچھلے 6 مہینے</h3>
+          <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[640px] text-[13px] border-collapse">
+              <thead>
+                <tr className="bg-[#FBF8F0]">
+                  {['مہینہ', 'وصول شدہ فیس', 'زیر التوا فیس', 'آمدنی', 'اخراجات', 'بیلنس'].map(h => (
+                    <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {monthlyRows.map(m => (
+                  <tr key={m.label}>
+                    <td className="px-4 py-[11px] border-b border-border font-semibold">{m.label}</td>
+                    <td className="px-4 py-[11px] border-b border-border font-mono text-income">{fmtMoney(m.feesCollected)}</td>
+                    <td className="px-4 py-[11px] border-b border-border font-mono text-danger">{fmtMoney(m.feesPending)}</td>
+                    <td className="px-4 py-[11px] border-b border-border font-mono text-income">{fmtMoney(m.income)}</td>
+                    <td className="px-4 py-[11px] border-b border-border font-mono text-danger">{fmtMoney(m.expense)}</td>
+                    <td className={`px-4 py-[11px] border-b border-border font-mono font-semibold ${m.balance >= 0 ? 'text-income' : 'text-danger'}`}>{fmtMoney(m.balance)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -192,8 +242,8 @@ export default function DashboardClient({
                 <>
                   <SectionTitle text={`حاضر (${presentStudents.length})`} />
                   {presentStudents.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="حاضر" positive />)}
-                  <SectionTitle text={`غائب (${absentStudents.length})`} />
-                  {absentStudents.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="غائب" />)}
+                  <SectionTitle text={`غیر حاضر (${absentStudents.length})`} />
+                  {absentStudents.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="غیر حاضر" />)}
                   {studentAttendance.length === 0 && <EmptyRow />}
                 </>
               )}
@@ -209,8 +259,8 @@ export default function DashboardClient({
                 <>
                   <SectionTitle text={`حاضر (${myPresent.length})`} />
                   {myPresent.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="حاضر" positive />)}
-                  <SectionTitle text={`غائب (${myAbsent.length})`} />
-                  {myAbsent.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="غائب" />)}
+                  <SectionTitle text={`غیر حاضر (${myAbsent.length})`} />
+                  {myAbsent.map((a, i) => <RowLine key={i} left={a.students?.full_name || '-'} right="غیر حاضر" />)}
                   {myAttendance.length === 0 && <EmptyRow />}
                 </>
               )}

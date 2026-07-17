@@ -4,10 +4,20 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
+function revalidateAll() {
+  revalidatePath('/teachers')
+  revalidatePath('/students')
+  revalidatePath('/classes')
+  revalidatePath('/salary')
+  revalidatePath('/progress')
+  revalidatePath('/dashboard')
+}
+
 export async function addTeacher(formData: FormData) {
   const full_name = String(formData.get('full_name') || '')
   const email = String(formData.get('email') || '')
   const password = String(formData.get('password') || '')
+  const role = String(formData.get('role') || 'teacher')
   const subject = String(formData.get('subject') || '')
   const monthly_salary = Number(formData.get('monthly_salary') || 0)
 
@@ -26,8 +36,8 @@ export async function addTeacher(formData: FormData) {
   const supabase = await createClient()
 
   // the trigger auto-creates a profiles row with role 'teacher' by default,
-  // but we still set full_name explicitly in case metadata timing differs
-  await supabase.from('profiles').update({ full_name, role: 'teacher' }).eq('id', created.user.id)
+  // we then set the actual full_name/role explicitly
+  await supabase.from('profiles').update({ full_name, role }).eq('id', created.user.id)
 
   const { error: detailsErr } = await supabase.from('teacher_details').insert({
     teacher_id: created.user.id,
@@ -36,7 +46,7 @@ export async function addTeacher(formData: FormData) {
   })
   if (detailsErr) return { error: detailsErr.message }
 
-  revalidatePath('/teachers')
+  revalidateAll()
   return { error: null }
 }
 
@@ -44,7 +54,7 @@ export async function toggleTeacherStatus(teacherId: string, currentStatus: stri
   const supabase = await createClient()
   const newStatus = currentStatus === 'Active' ? 'Disabled' : 'Active'
   const { error } = await supabase.from('profiles').update({ status: newStatus }).eq('id', teacherId)
-  revalidatePath('/teachers')
+  revalidateAll()
   return { error: error?.message || null }
 }
 
@@ -62,7 +72,7 @@ export async function updateTeacher(teacherId: string, formData: FormData) {
     teacher_id: teacherId, subject, monthly_salary,
   })
 
-  revalidatePath('/teachers')
+  revalidateAll()
   return { error: detErr?.message || null }
 }
 
@@ -79,10 +89,10 @@ export async function deleteTeacher(teacherId: string) {
 
   if (error) {
     return {
-      error: 'اس استاذ کو حذف نہیں کیا جا سکا — غالباً ان کا پرانا ریکارڈ (حاضری، تنخواہ سلپ، یا طلبہ کی پیش رفت) موجود ہے۔ اس صورت میں "معطل" کا آپشن استعمال کریں۔',
+      error: 'اس صارف کو حذف نہیں کیا جا سکا — غالباً ان کا پرانا ریکارڈ (حاضری، تنخواہ سلپ، یا طلبہ کی پیش رفت) موجود ہے۔ اس صورت میں "معطل" کا آپشن استعمال کریں۔',
     }
   }
 
-  revalidatePath('/teachers')
+  revalidateAll()
   return { error: null }
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { X, Trash2 } from 'lucide-react'
+import { X, Trash2, Search } from 'lucide-react'
 import { addIncome, deleteIncome } from './actions'
 import { incomeCategoryLabel } from '@/lib/labels'
 
@@ -21,6 +21,8 @@ export default function IncomeClient({
   const [busyId, setBusyId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest')
 
   const totals = useMemo(() => {
     const map: Record<string, number> = {}
@@ -33,7 +35,39 @@ export default function IncomeClient({
 
   const grandTotal = allCards.reduce((s, c) => s + (totals[c] || 0), 0)
   const isReadOnly = selected === FEES_KEY || selected === FUNDS_KEY
-  const filteredRows = rows.filter(r => r.category === selected)
+
+  const filteredRows = useMemo(() => {
+    let r = rows.filter(r => r.category === selected)
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      r = r.filter(x => x.source.toLowerCase().includes(q) || (x.purpose || '').toLowerCase().includes(q) || (x.notes || '').toLowerCase().includes(q))
+    }
+    r = [...r].sort((a, b) => sortOrder === 'latest' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date))
+    return r
+  }, [rows, selected, search, sortOrder])
+
+  const visibleFeesRows = useMemo(() => {
+    let r = feesRows
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      r = r.filter(x => (x.students?.full_name || '').toLowerCase().includes(q) || x.month.toLowerCase().includes(q))
+    }
+    r = [...r].sort((a, b) => {
+      const da = a.paid_on || ''; const db = b.paid_on || ''
+      return sortOrder === 'latest' ? db.localeCompare(da) : da.localeCompare(db)
+    })
+    return r
+  }, [feesRows, search, sortOrder])
+
+  const visibleFundsRows = useMemo(() => {
+    let r = fundsRows
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      r = r.filter(x => x.source.toLowerCase().includes(q) || (x.purpose || '').toLowerCase().includes(q))
+    }
+    r = [...r].sort((a, b) => sortOrder === 'latest' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date))
+    return r
+  }, [fundsRows, search, sortOrder])
 
   async function handleDelete(id: string) {
     if (!confirm('یہ اندراج حذف کریں؟')) return
@@ -89,11 +123,27 @@ export default function IncomeClient({
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-7 mb-3">
+      <div className="flex items-center justify-between mt-7 mb-3 flex-wrap gap-2">
         <h3 className="text-[15.5px] font-semibold">{incomeCategoryLabel[selected] || selected} — اندراجات</h3>
         {!isReadOnly && (
           <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ اندراج شامل کریں</button>
         )}
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap mb-3">
+        <div className="relative">
+          <Search size={15} className="absolute left-[11px] top-[9px] text-muted" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="تلاش کریں..."
+            className="pl-[34px] pr-[14px] py-[8px] border border-border rounded-[9px] text-[12.5px] w-[200px] bg-surface"
+          />
+        </div>
+        <select value={sortOrder} onChange={e => setSortOrder(e.target.value as any)} className="px-2 py-[8px] border border-border rounded-[9px] text-[12.5px] bg-surface">
+          <option value="latest">تازہ ترین پہلے</option>
+          <option value="oldest">پرانے پہلے</option>
+        </select>
       </div>
 
       {selected === FEES_KEY ? (
@@ -107,8 +157,8 @@ export default function IncomeClient({
               </tr>
             </thead>
             <tbody>
-              {feesRows.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">ابھی کوئی فیس وصول نہیں ہوئی۔</td></tr>}
-              {feesRows.map(f => (
+              {visibleFeesRows.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">ابھی کوئی فیس وصول نہیں ہوئی۔</td></tr>}
+              {visibleFeesRows.map(f => (
                 <tr key={f.id}>
                   <td className="px-4 py-[11px] border-b border-border">{f.paid_on || '-'}</td>
                   <td className="px-4 py-[11px] border-b border-border">{f.students?.full_name || '-'}</td>
@@ -130,8 +180,8 @@ export default function IncomeClient({
               </tr>
             </thead>
             <tbody>
-              {fundsRows.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">ابھی کوئی فنڈ اندراج نہیں۔</td></tr>}
-              {fundsRows.map(f => (
+              {visibleFundsRows.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">ابھی کوئی فنڈ اندراج نہیں۔</td></tr>}
+              {visibleFundsRows.map(f => (
                 <tr key={f.id}>
                   <td className="px-4 py-[11px] border-b border-border">{f.date}</td>
                   <td className="px-4 py-[11px] border-b border-border">{f.source}</td>

@@ -68,6 +68,8 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
   }
 
   const historySlips = historyFor ? slips.filter(s => s.teacher_id === historyFor.id) : []
+  const [historySearch, setHistorySearch] = useState('')
+  const filteredHistory = historySlips.filter(s => !historySearch.trim() || s.month.toLowerCase().includes(historySearch.toLowerCase()))
 
   return (
     <>
@@ -155,6 +157,14 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
               <h3 className="font-display text-[16px] font-semibold">تنخواہ کی تاریخ — {historyFor.full_name}</h3>
               <button onClick={() => setHistoryFor(null)} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
             </div>
+            <div className="px-6 py-3 border-b border-border">
+              <input
+                value={historySearch}
+                onChange={e => setHistorySearch(e.target.value)}
+                placeholder="مہینہ تلاش کریں (مثلاً Jul 2026)..."
+                className="px-3 py-[8px] border border-border rounded-[9px] text-[12.5px] w-[240px] bg-surface"
+              />
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[560px] text-[13px] border-collapse">
                 <thead>
@@ -165,8 +175,8 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
                   </tr>
                 </thead>
                 <tbody>
-                  {historySlips.length === 0 && <tr><td colSpan={7} className="text-center text-muted py-8">ابھی کوئی سلپ نہیں بنی۔</td></tr>}
-                  {historySlips.map(s => (
+                  {filteredHistory.length === 0 && <tr><td colSpan={7} className="text-center text-muted py-8">ابھی کوئی سلپ نہیں بنی۔</td></tr>}
+                  {filteredHistory.map(s => (
                     <tr key={s.id}>
                       <td className="px-3 py-[10px] border-b border-border">{s.month}</td>
                       <td className="px-3 py-[10px] border-b border-border font-mono">{fmt(s.basic_salary)}</td>

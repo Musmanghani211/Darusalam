@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { X, Trash2 } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { X, Trash2, Search } from 'lucide-react'
 import { collectFee, addFeeEntry, deleteFeeEntry } from './actions'
 import { feeStatusLabel } from '@/lib/labels'
 import { monthOptions, currentMonthLabel } from '@/lib/months'
@@ -19,8 +19,21 @@ export default function FeesClient({
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest')
 
-  const filtered = fees.filter(f => filter === 'All' || f.status === filter)
+  const filtered = useMemo(() => {
+    let rows = fees.filter(f => filter === 'All' || f.status === filter)
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      rows = rows.filter(f => (f.students?.full_name || '').toLowerCase().includes(q) || f.month.toLowerCase().includes(q))
+    }
+    rows = [...rows].sort((a, b) => {
+      const da = a.paid_on || '0000'; const db = b.paid_on || '0000'
+      return sortOrder === 'latest' ? db.localeCompare(da) : da.localeCompare(db)
+    })
+    return rows
+  }, [fees, filter, search, sortOrder])
 
   async function handleCollect(id: string) {
     setBusyId(id)
@@ -85,13 +98,29 @@ export default function FeesClient({
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">فیس لوڈ نہیں ہو سکی: {loadError}</div>}
 
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
         <div className="flex gap-[6px] bg-[#F1ECDD] rounded-[9px] p-[3px]">
           {(['All', 'Paid', 'Pending'] as const).map(t => (
             <button key={t} onClick={() => setFilter(t)} className={`text-[12.5px] font-semibold px-[13px] py-[7px] rounded-[7px] ${filter === t ? 'bg-surface shadow-sm' : 'text-muted'}`}>{t === 'All' ? 'تمام' : feeStatusLabel[t]}</button>
           ))}
         </div>
         <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ فیس اندراج شامل کریں</button>
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap mb-4">
+        <div className="relative">
+          <Search size={15} className="absolute left-[11px] top-[9px] text-muted" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="طالب علم یا مہینہ تلاش کریں..."
+            className="pl-[34px] pr-[14px] py-[8px] border border-border rounded-[9px] text-[12.5px] w-[220px] bg-surface"
+          />
+        </div>
+        <select value={sortOrder} onChange={e => setSortOrder(e.target.value as any)} className="px-2 py-[8px] border border-border rounded-[9px] text-[12.5px] bg-surface">
+          <option value="latest">تازہ ترین پہلے</option>
+          <option value="oldest">پرانے پہلے</option>
+        </select>
       </div>
 
       <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">

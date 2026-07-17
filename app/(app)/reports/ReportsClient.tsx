@@ -43,7 +43,7 @@ export default function ReportsClient({
     { key: 'balance', title: 'بیلنس کی رپورٹ', value: fmt(balance), note: 'کل آمدنی مائنس کل اخراجات' },
     { key: 'students', title: 'طلبہ کی رپورٹ', value: String(students.length), note: 'مکمل فہرست دیکھنے کے لیے تھپتھپائیں' },
     { key: 'teachers', title: 'اساتذہ کی رپورٹ', value: String(teachers.length), note: 'مکمل فہرست دیکھنے کے لیے تھپتھپائیں' },
-    { key: 'attendance', title: 'حاضری کی رپورٹ', value: `${presentToday} / ${students.filter(s => s.status === 'Active').length}`, note: 'آج حاضر — غائب دیکھنے کے لیے تھپتھپائیں' },
+    { key: 'attendance', title: 'حاضری کی رپورٹ', value: `${presentToday} / ${students.filter(s => s.status === 'Active').length}`, note: 'آج حاضر — غیر حاضر دیکھنے کے لیے تھپتھپائیں' },
     { key: 'fees', title: 'فیس کی رپورٹ', value: `${fmt(totalFeesCollected)} وصول`, note: `${fmt(totalPendingFees)} زیر التوا` },
     { key: 'salary', title: 'تنخواہ کی رپورٹ', value: fmt(totalSalaryPaid), note: `${salarySlips.length} سلپس بنیں` },
   ]
@@ -124,9 +124,9 @@ export default function ReportsClient({
                   {attendanceToday.filter(a => a.person_type === 'student' && a.status === 'Present').map((a, i) => (
                     <RowLine key={i} left={a.students?.full_name || '-'} right="حاضر" positive />
                   ))}
-                  <SectionTitle text={`غائب (${absentToday.length})`} />
+                  <SectionTitle text={`غیر حاضر (${absentToday.length})`} />
                   {absentToday.map((a, i) => (
-                    <RowLine key={i} left={a.students?.full_name || '-'} right="غائب" />
+                    <RowLine key={i} left={a.students?.full_name || '-'} right="غیر حاضر" />
                   ))}
                   {attendanceToday.length === 0 && <Empty />}
                 </>

@@ -51,7 +51,7 @@ export default function ProgressClient({
           <div className="font-display font-mono text-[26px] font-semibold mt-[6px]">{totalStudents}</div>
         </div>
         <div className="bg-surface border border-border rounded-card p-[16px_18px] shadow-sm">
-          <div className="text-[11.5px] text-muted font-semibold">آج غائب</div>
+          <div className="text-[11.5px] text-muted font-semibold">آج غیر حاضر</div>
           <div className="font-display font-mono text-[26px] font-semibold mt-[6px] text-danger">{totalAbsent}</div>
         </div>
       </div>
@@ -78,7 +78,7 @@ export default function ProgressClient({
                   <td className="px-4 py-[11px] border-b border-border font-semibold">{s.full_name}</td>
                   <td className="px-4 py-[11px] border-b border-border">{s.classes?.name || '-'}</td>
                   <td className="px-4 py-[11px] border-b border-border">
-                    <span className={`badge ${isAbsent ? 'bg-danger-bg text-danger' : 'bg-income-bg text-income'}`}>{isAbsent ? 'غائب' : 'حاضر'}</span>
+                    <span className={`badge ${isAbsent ? 'bg-danger-bg text-danger' : 'bg-income-bg text-income'}`}>{isAbsent ? 'غیر حاضر' : 'حاضر'}</span>
                   </td>
                   <td className="px-4 py-[11px] border-b border-border text-[12px]">{sabaq ? refText(sabaq.to_para, sabaq.to_surah, sabaq.to_ayat) : '-'}</td>
                   <td className="px-4 py-[11px] border-b border-border text-[12px]">{sabqi ? refText(sabqi.to_para, sabqi.to_surah, sabqi.to_ayat) : '-'}</td>
@@ -88,7 +88,7 @@ export default function ProgressClient({
                       <button
                         onClick={() => setAddFor(s)}
                         disabled={isAbsent}
-                        title={isAbsent ? 'غائب طالب علم کا اندراج نہیں کیا جا سکتا' : ''}
+                        title={isAbsent ? 'غیر حاضر طالب علم کا اندراج نہیں کیا جا سکتا' : ''}
                         className="text-[12px] bg-primary text-white rounded-[7px] px-3 py-[6px] font-semibold disabled:opacity-40 flex items-center gap-1"
                       >
                         <Plus size={13} /> اندراج
