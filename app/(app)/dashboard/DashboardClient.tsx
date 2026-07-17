@@ -62,7 +62,7 @@ export default function DashboardClient({
   const monthlyRows = useMemo(() => {
     const base = new Date(monthStart + 'T00:00:00')
     const rows = []
-    for (let i = 0; i <=5; i++) {
+    for (let i = 0; i <= 5; i++) {
       const d = new Date(base.getFullYear(), base.getMonth() - i, 1)
       const label = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`
       const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
@@ -225,7 +225,7 @@ export default function DashboardClient({
         </div>
       )}
 
-      {(role === 'mohtamim' || role === 'nazim') && (
+      {role === 'mohtamim' && (
         <div className="mt-7">
           <h3 className="text-[15.5px] font-semibold mb-3">ماہانہ تجزیہ — پچھلے 6 مہینے</h3>
           <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
@@ -246,6 +246,32 @@ export default function DashboardClient({
                     <td className="px-4 py-[11px] border-b border-border font-mono text-income">{fmtMoney(m.income)}</td>
                     <td className="px-4 py-[11px] border-b border-border font-mono text-danger">{fmtMoney(m.expense)}</td>
                     <td className={`px-4 py-[11px] border-b border-border font-mono font-semibold ${m.balance >= 0 ? 'text-income' : 'text-danger'}`}>{fmtMoney(m.balance)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {role === 'nazim' && (
+        <div className="mt-7">
+          <h3 className="text-[15.5px] font-semibold mb-3">فیس کا ماہانہ تجزیہ — پچھلے 6 مہینے</h3>
+          <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[420px] text-[13px] border-collapse">
+              <thead>
+                <tr className="bg-[#FBF8F0]">
+                  {['مہینہ', 'وصول شدہ فیس', 'زیر التوا فیس'].map(h => (
+                    <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {monthlyRows.map(m => (
+                  <tr key={m.label}>
+                    <td className="px-4 py-[11px] border-b border-border font-semibold">{m.label}</td>
+                    <td className="px-4 py-[11px] border-b border-border font-mono text-income">{fmtMoney(m.feesCollected)}</td>
+                    <td className="px-4 py-[11px] border-b border-border font-mono text-danger">{fmtMoney(m.feesPending)}</td>
                   </tr>
                 ))}
               </tbody>
