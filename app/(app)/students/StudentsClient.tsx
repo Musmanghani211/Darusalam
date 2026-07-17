@@ -1,10 +1,20 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Search, X, Trash2 } from 'lucide-react'
+import { Search, X, Trash2, Pencil, Eye } from 'lucide-react'
 import { addStudent, updateStudent, deleteStudent } from './actions'
+import { updateProgressEntry } from '../progress/actions'
 import { statusLabel, feeStatusLabel } from '@/lib/labels'
 import { currentMonthLabel } from '@/lib/months'
+import { todayPKT } from '@/lib/date'
+import { surahsForPara, ayatRangeForParaSurah, surahName } from '@/lib/quran-data'
+
+const TYPE_LABEL: Record<string, string> = { Sabaq: 'سبق', Sabqi: 'سبقی', Manzil: 'منزل' }
+const PARAS = Array.from({ length: 30 }, (_, i) => i + 1)
+
+function refText(para: number, surah: number, ayat: number) {
+  return `پارہ ${para} — ${surahName(surah)} — آیت ${ayat}`
+}
 
 type Student = {
   id: string
@@ -25,14 +35,22 @@ type Student = {
   profiles: { full_name: string } | null
 }
 
+type ProgressEntry = {
+  id: string; student_id: string; entry_type: string
+  from_para: number; from_surah: number; from_ayat: number
+  to_para: number; to_surah: number; to_ayat: number
+  entry_date: string; created_at: string
+}
+
 export default function StudentsClient({
-  role, students, classes, teachers, feesByStudent, loadError,
+  role, students, classes, teachers, feesByStudent, progressEntries, loadError,
 }: {
   role: string
   students: Student[]
   classes: { id: string; name: string; teacher_id: string | null }[]
   teachers: { id: string; full_name: string }[]
   feesByStudent: { student_id: string; status: string; month: string }[]
+  progressEntries: ProgressEntry[]
   loadError?: string
 }) {
   const [search, setSearch] = useState('')
@@ -42,6 +60,8 @@ export default function StudentsClient({
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [showProgressHistory, setShowProgressHistory] = useState(false)
+  const [editingEntry, setEditingEntry] = useState<ProgressEntry | null>(null)
 
   async function handleDeleteStudent(id: string) {
     if (!confirm('یہ طالب علم اور اس کا تمام ریکارڈ (فیس، حاضری، پیش رفت) مستقل طور پر حذف کریں؟')) return
@@ -59,11 +79,19 @@ export default function StudentsClient({
   const [formError, setFormError] = useState<string | null>(null)
 
   const canManage = role === 'mohtamim' || role === 'nazim'
+  const today = todayPKT()
 
   const thisMonth = currentMonthLabel()
   const feeStatusFor = (studentId: string) => {
     const row = feesByStudent.find(f => f.student_id === studentId && f.month === thisMonth)
     return row?.status || 'Pending'
+  }
+
+  const entriesFor = (studentId: string) => progressEntries.filter(e => e.student_id === studentId)
+  const latestFor = (studentId: string, type: string) => {
+    return entriesFor(studentId)
+      .filter(e => e.entry_type === type)
+      .sort((a, b) => (a.entry_date + a.created_at < b.entry_date + b.created_at ? 1 : -1))[0]
   }
 
   const filtered = useMemo(() => {
@@ -139,7 +167,7 @@ export default function StudentsClient({
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="text-center text-muted py-10">ابھی کوئی طالب علم نہیں۔</td></tr>
+              <tr><td colSpan={7} className="text-center text-muted py-10">ابھی کوئی طالب علم نہیں۔ پہلا داخلہ شامل کریں۔</td></tr>
             )}
             {filtered.map(s => (
               <tr key={s.id} onClick={() => { setSelected(s); setEditMode(false); setEditError(null) }} className="hover:bg-[#FBF8F0] cursor-pointer">
@@ -192,11 +220,33 @@ export default function StudentsClient({
                   <DlRow label="مقرر استاذ" value={selected.profiles?.full_name || '-'} />
                   <DlRow label="حالت" value={statusLabel[selected.status] || selected.status} />
                 </DlGroup>
-                <DlGroup title="سبق کی نگرانی">
-                  <DlRow label="موجودہ سبق" value={selected.current_sabaq || '-'} />
-                  <DlRow label="سبقی" value={selected.sabqi || '-'} />
-                  <DlRow label="منزل" value={selected.manzil || '-'} />
-                </DlGroup>
+
+                <div className="mb-[18px]">
+                  <div className="flex items-center justify-between mb-[9px]">
+                    <h4 className="text-[11.5px] uppercase tracking-wide text-muted font-semibold">سبق کی نگرانی</h4>
+                    <button onClick={() => setShowProgressHistory(true)} className="text-[11.5px] text-primary font-semibold flex items-center gap-1">
+                      <Eye size={13} /> مکمل تاریخ دیکھیں
+                    </button>
+                  </div>
+                  {(['Sabaq', 'Sabqi', 'Manzil'] as const).map(type => {
+                    const e = latestFor(selected.id, type)
+                    const isToday = e?.entry_date === today
+                    return (
+                      <div key={type} className="py-[8px] border-b border-dashed border-border last:border-0">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[13px] text-muted">{TYPE_LABEL[type]}</span>
+                          {e && (
+                            <span className={`badge ${isToday ? 'bg-income-bg text-income' : 'bg-[#EFEEE7] text-muted'}`}>
+                              {isToday ? 'آج دیا گیا' : `آخری: ${e.entry_date}`}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[12.5px] font-semibold mt-1">{e ? refText(e.to_para, e.to_surah, e.to_ayat) : 'ابھی کوئی ریکارڈ نہیں'}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+
                 {canManage && (
                   <div className="flex gap-2">
                     <button onClick={() => { setEditMode(true); setEditClassId(selected.class_id || '') }} className="flex-1 bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors">
@@ -277,6 +327,26 @@ export default function StudentsClient({
         </div>
       )}
 
+      {/* Progress history modal */}
+      {selected && showProgressHistory && (
+        <ProgressHistoryModal
+          student={selected}
+          entries={entriesFor(selected.id)}
+          canEdit={canManage}
+          onClose={() => setShowProgressHistory(false)}
+          onEdit={(entry) => setEditingEntry(entry)}
+        />
+      )}
+
+      {editingEntry && (
+        <EditProgressModal
+          entry={editingEntry}
+          today={today}
+          onClose={() => setEditingEntry(null)}
+          onSaved={() => setEditingEntry(null)}
+        />
+      )}
+
       {/* Add student modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-primary-dark/35 z-50 flex justify-end" onClick={() => setShowAddForm(false)}>
@@ -331,6 +401,162 @@ export default function StudentsClient({
         </div>
       )}
     </>
+  )
+}
+
+function ProgressHistoryModal({
+  student, entries, canEdit, onClose, onEdit,
+}: { student: Student; entries: ProgressEntry[]; canEdit: boolean; onClose: () => void; onEdit: (e: ProgressEntry) => void }) {
+  const [typeFilter, setTypeFilter] = useState('All')
+  const sorted = [...entries]
+    .filter(e => typeFilter === 'All' || e.entry_type === typeFilter)
+    .sort((a, b) => (a.entry_date + a.created_at < b.entry_date + b.created_at ? 1 : -1))
+
+  return (
+    <div className="fixed inset-0 bg-primary-dark/45 z-[60] flex justify-end" onClick={onClose}>
+      <div className="w-[560px] max-w-[96vw] bg-surface h-full overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="px-6 py-5 border-b border-border flex justify-between items-start sticky top-0 bg-surface z-10">
+          <h3 className="font-display text-[17px] font-semibold">{student.full_name} — مکمل تاریخ</h3>
+          <button onClick={onClose} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
+        </div>
+        <div className="px-6 py-3 border-b border-border">
+          <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-2 py-[7px] border border-border rounded-[7px] text-[12.5px] bg-[#FEFDFA]">
+            <option value="All">تمام اقسام</option>
+            <option value="Sabaq">سبق</option>
+            <option value="Sabqi">سبقی</option>
+            <option value="Manzil">منزل</option>
+          </select>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px] text-[13px] border-collapse">
+            <thead>
+              <tr className="bg-[#FBF8F0]">
+                {['قسم', 'از', 'تا', 'تاریخ', ...(canEdit ? [''] : [])].map(h => (
+                  <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-3 py-[10px] border-b border-border">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-8">کوئی ریکارڈ نہیں ملا۔</td></tr>}
+              {sorted.map(e => (
+                <tr key={e.id}>
+                  <td className="px-3 py-[10px] border-b border-border"><span className="badge bg-[#FBF1DC] text-[#8A6A16]">{TYPE_LABEL[e.entry_type]}</span></td>
+                  <td className="px-3 py-[10px] border-b border-border text-[12px]">{refText(e.from_para, e.from_surah, e.from_ayat)}</td>
+                  <td className="px-3 py-[10px] border-b border-border text-[12px]">{refText(e.to_para, e.to_surah, e.to_ayat)}</td>
+                  <td className="px-3 py-[10px] border-b border-border">{e.entry_date}</td>
+                  {canEdit && (
+                    <td className="px-3 py-[10px] border-b border-border">
+                      <button onClick={() => onEdit(e)} className="text-muted hover:bg-[#F1ECDD] rounded-[6px] p-[5px]"><Pencil size={13} /></button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function EditProgressModal({
+  entry, today, onClose, onSaved,
+}: { entry: ProgressEntry; today: string; onClose: () => void; onSaved: () => void }) {
+  const [entryType, setEntryType] = useState(entry.entry_type)
+  const [fromPara, setFromPara] = useState<number>(entry.from_para)
+  const [fromSurah, setFromSurah] = useState<number>(entry.from_surah)
+  const [fromAyat, setFromAyat] = useState<number>(entry.from_ayat)
+  const [toPara, setToPara] = useState<number>(entry.to_para)
+  const [toSurah, setToSurah] = useState<number>(entry.to_surah)
+  const [toAyat, setToAyat] = useState<number>(entry.to_ayat)
+  const [date, setDate] = useState(entry.entry_date)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fromSurahs = fromPara ? surahsForPara(fromPara) : []
+  const fromAyatRange = fromPara && fromSurah ? ayatRangeForParaSurah(fromPara, fromSurah) : null
+  const toSurahs = toPara ? surahsForPara(toPara) : []
+  const toAyatRange = toPara && toSurah ? ayatRangeForParaSurah(toPara, toSurah) : null
+
+  async function handleSubmit(formData: FormData) {
+    setSaving(true)
+    setError(null)
+    const res = await updateProgressEntry(entry.id, formData)
+    setSaving(false)
+    if (res?.error) setError(res.error)
+    else onSaved()
+  }
+
+  return (
+    <div className="fixed inset-0 bg-primary-dark/45 z-[70] flex justify-end" onClick={onClose}>
+      <div className="w-[480px] max-w-[94vw] bg-surface h-full overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="px-6 py-5 border-b border-border flex justify-between items-start sticky top-0 bg-surface">
+          <h3 className="font-display text-[17px] font-semibold">اندراج میں ترمیم</h3>
+          <button onClick={onClose} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
+        </div>
+        <form action={handleSubmit} className="px-6 py-[20px] flex flex-col gap-4">
+          {error && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{error}</div>}
+
+          <div>
+            <label className="block text-[11.5px] font-semibold text-muted mb-[5px]">قسم</label>
+            <select name="entry_type" value={entryType} onChange={e => setEntryType(e.target.value)} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+              <option value="Sabaq">سبق</option>
+              <option value="Sabqi">سبقی</option>
+              <option value="Manzil">منزل</option>
+            </select>
+          </div>
+
+          <div className="border border-border rounded-[10px] p-3">
+            <div className="text-[12px] font-semibold text-muted mb-2">شروع (Az)</div>
+            <div className="grid grid-cols-3 gap-2">
+              <select name="from_para" value={fromPara} onChange={e => { setFromPara(Number(e.target.value)); setFromSurah(0); setFromAyat(0) }} className="px-2 py-[8px] border border-border rounded-[7px] text-[12.5px] bg-[#FEFDFA]">
+                <option value="">پارہ</option>
+                {PARAS.map(p => <option key={p} value={p}>پارہ {p}</option>)}
+              </select>
+              <select name="from_surah" value={fromSurah} onChange={e => { setFromSurah(Number(e.target.value)); setFromAyat(0) }} disabled={!fromPara} className="px-2 py-[8px] border border-border rounded-[7px] text-[12.5px] bg-[#FEFDFA] disabled:opacity-50">
+                <option value="">سورہ</option>
+                {fromSurahs.map(s => <option key={s.number} value={s.number}>{s.nameEnglish}</option>)}
+              </select>
+              <select name="from_ayat" value={fromAyat} onChange={e => setFromAyat(Number(e.target.value))} disabled={!fromAyatRange} className="px-2 py-[8px] border border-border rounded-[7px] text-[12.5px] bg-[#FEFDFA] disabled:opacity-50">
+                <option value="">آیت</option>
+                {fromAyatRange && Array.from({ length: fromAyatRange.end - fromAyatRange.start + 1 }, (_, i) => fromAyatRange.start + i).map(a => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="border border-border rounded-[10px] p-3">
+            <div className="text-[12px] font-semibold text-muted mb-2">ختم (Ta)</div>
+            <div className="grid grid-cols-3 gap-2">
+              <select name="to_para" value={toPara} onChange={e => { setToPara(Number(e.target.value)); setToSurah(0); setToAyat(0) }} className="px-2 py-[8px] border border-border rounded-[7px] text-[12.5px] bg-[#FEFDFA]">
+                <option value="">پارہ</option>
+                {PARAS.map(p => <option key={p} value={p}>پارہ {p}</option>)}
+              </select>
+              <select name="to_surah" value={toSurah} onChange={e => { setToSurah(Number(e.target.value)); setToAyat(0) }} disabled={!toPara} className="px-2 py-[8px] border border-border rounded-[7px] text-[12.5px] bg-[#FEFDFA] disabled:opacity-50">
+                <option value="">سورہ</option>
+                {toSurahs.map(s => <option key={s.number} value={s.number}>{s.nameEnglish}</option>)}
+              </select>
+              <select name="to_ayat" value={toAyat} onChange={e => setToAyat(Number(e.target.value))} disabled={!toAyatRange} className="px-2 py-[8px] border border-border rounded-[7px] text-[12.5px] bg-[#FEFDFA] disabled:opacity-50">
+                <option value="">آیت</option>
+                {toAyatRange && Array.from({ length: toAyatRange.end - toAyatRange.start + 1 }, (_, i) => toAyatRange.start + i).map(a => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11.5px] font-semibold text-muted mb-[5px]">تاریخ</label>
+            <input name="entry_date" type="date" max={today} value={date} onChange={e => setDate(e.target.value)} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+          </div>
+
+          <button type="submit" disabled={saving} className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors disabled:opacity-60">
+            {saving ? 'محفوظ ہو رہا ہے...' : 'تبدیلیاں محفوظ کریں'}
+          </button>
+        </form>
+      </div>
+    </div>
   )
 }
 

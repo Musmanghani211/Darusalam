@@ -23,7 +23,13 @@ export default async function StudentsPage() {
   }))
   const { data: teachers } = await supabase.from('profiles').select('id, full_name').eq('role', 'teacher')
 
-const { data: feesByStudent } = await supabase.from('fees').select('student_id, status, month').order('created_at', { ascending: false })
+  const { data: feesByStudent } = await supabase.from('fees').select('student_id, status, month').order('created_at', { ascending: false })
+
+  const { data: progressEntries } = await supabase
+    .from('progress_entries')
+    .select('*')
+    .order('entry_date', { ascending: false })
+    .order('created_at', { ascending: false })
 
   const normalized = (students || []).map((s: any) => ({
     ...s,
@@ -38,6 +44,7 @@ const { data: feesByStudent } = await supabase.from('fees').select('student_id, 
       classes={classes || []}
       teachers={teachers || []}
       feesByStudent={feesByStudent || []}
+      progressEntries={progressEntries || []}
       loadError={error?.message}
     />
   )

@@ -40,3 +40,28 @@ export async function deleteProgressEntry(id: string) {
   revalidatePath('/progress')
   return { error: error?.message || null }
 }
+
+export async function updateProgressEntry(id: string, formData: FormData) {
+  const supabase = await createClient()
+
+  const entry_type = String(formData.get('entry_type') || '')
+  const from_para = Number(formData.get('from_para') || 0)
+  const from_surah = Number(formData.get('from_surah') || 0)
+  const from_ayat = Number(formData.get('from_ayat') || 0)
+  const to_para = Number(formData.get('to_para') || 0)
+  const to_surah = Number(formData.get('to_surah') || 0)
+  const to_ayat = Number(formData.get('to_ayat') || 0)
+  const entry_date = String(formData.get('entry_date') || '')
+
+  if (!entry_type || !from_para || !from_surah || !from_ayat || !to_para || !to_surah || !to_ayat || !entry_date) {
+    return { error: 'تمام فیلڈز پُر کریں' }
+  }
+
+  const { error } = await supabase.from('progress_entries').update({
+    entry_type, from_para, from_surah, from_ayat, to_para, to_surah, to_ayat, entry_date,
+  }).eq('id', id)
+
+  revalidatePath('/progress')
+  revalidatePath('/students')
+  return { error: error?.message || null }
+}
