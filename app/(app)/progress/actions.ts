@@ -21,6 +21,18 @@ export async function addProgressEntry(formData: FormData) {
     return { error: 'تمام فیلڈز پُر کریں' }
   }
 
+  const { data: existing } = await supabase
+    .from('progress_entries')
+    .select('id')
+    .eq('student_id', student_id)
+    .eq('entry_type', entry_type)
+    .eq('entry_date', entry_date)
+    .maybeSingle()
+
+  if (existing) {
+    return { error: 'اس تاریخ کے لیے یہ قسم پہلے سے شامل ہے — ترمیم کے لیے اسی اندراج کو کھولیں۔' }
+  }
+
   const { error } = await supabase.from('progress_entries').insert({
     student_id,
     teacher_id: profile?.id,

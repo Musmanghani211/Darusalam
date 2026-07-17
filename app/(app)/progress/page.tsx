@@ -2,15 +2,18 @@ import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import { todayPKT } from '@/lib/date'
 import ProgressClient from './ProgressClient'
 
-export default async function ProgressPage() {
+export default async function ProgressPage({
+  searchParams,
+}: { searchParams: Promise<{ date?: string }> }) {
   const profile = await getCurrentProfile()
   const supabase = await createClient()
-  const today = todayPKT()
+  const params = await searchParams
+  const selectedDate = params?.date || todayPKT()
   const isAdmin = profile?.role === 'mohtamim' || profile?.role === 'nazim'
 
   let query = supabase
     .from('students')
-    .select('id, full_name, classes(name), profiles!students_teacher_id_fkey(full_name)')
+    .select('id, full_name, phone, classes(name), profiles!students_teacher_id_fkey(full_name)')
     .eq('status', 'Active')
 
   if (!isAdmin) {
@@ -27,8 +30,8 @@ export default async function ProgressPage() {
 
   const studentIds = normalizedStudents.map(s => s.id)
 
-  const { data: todayAttendance } = studentIds.length
-    ? await supabase.from('attendance').select('student_id, status').eq('date', today).in('student_id', studentIds)
+  const { data: dayAttendance } = studentIds.length
+    ? await supabase.from('attendance').select('student_id, status').eq('date', selectedDate).in('student_id', studentIds)
     : { data: [] as any[] }
 
   const { data: allEntries } = studentIds.length
@@ -37,11 +40,13 @@ export default async function ProgressPage() {
 
   return (
     <ProgressClient
+      key={selectedDate}
+      role={profile?.role || 'teacher'}
       students={normalizedStudents}
       showTeacherColumn={isAdmin}
-      todayAttendance={todayAttendance || []}
+      dayAttendance={dayAttendance || []}
       entries={allEntries || []}
-      today={today}
+      selectedDate={selectedDate}
       loadError={error?.message}
     />
   )
