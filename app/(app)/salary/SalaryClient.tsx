@@ -1,25 +1,26 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { X, Trash2, Pencil } from 'lucide-react'
-import { generateSalary, deleteSalarySlip, addAdvance, updateSalarySlip } from './actions'
+import { generateSalary, deleteSalarySlip, addAdvance, updateSalarySlip, deleteAdvance } from './actions'
 import { monthOptions, currentMonthLabel } from '@/lib/months'
 
 type Teacher = {
   id: string; full_name: string; role: string
-  teacher_details: { subject: string; monthly_salary: number; pending_advance: number } | null
+  teacher_details: { subject: string; monthly_salary: number } | null
 }
 type Slip = {
   id: string; teacher_id: string; month: string
   basic_salary: number; bonus: number; deductions: number; advance_deducted: number; net_paid: number
   created_at: string
 }
+type Advance = { id: string; teacher_id: string; amount: number; date: string; settled: boolean; settled_in_slip_id: string | null }
 
 function fmt(n: number) {
   return 'Rs ' + Number(n || 0).toLocaleString('en-PK')
 }
 
-export default function SalaryClient({ teachers, slips, loadError }: { teachers: Teacher[]; slips: Slip[]; loadError?: string }) {
+export default function SalaryClient({ teachers, slips, advances, loadError }: { teachers: Teacher[]; slips: Slip[]; advances: Advance[]; loadError?: string }) {
   const [genFor, setGenFor] = useState<Teacher | null>(null)
   const [historyFor, setHistoryFor] = useState<Teacher | null>(null)
   const [advanceFor, setAdvanceFor] = useState<Teacher | null>(null)
@@ -27,8 +28,13 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [historySearch, setHistorySearch] = useState('')
 
   const thisMonth = currentMonthLabel()
+
+  function pendingAdvanceFor(teacherId: string) {
+    return advances.filter(a => a.teacher_id === teacherId && !a.settled).reduce((s, a) => s + Number(a.amount), 0)
+  }
 
   async function handleGenerate(formData: FormData) {
     setSaving(true)
@@ -50,6 +56,14 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
     else setAdvanceFor(null)
   }
 
+  async function handleDeleteAdvance(id: string) {
+    if (!confirm('یہ ایڈوانس اندراج حذف کریں؟')) return
+    setBusyId(id)
+    const res = await deleteAdvance(id)
+    setBusyId(null)
+    if (res?.error) alert(res.error)
+  }
+
   async function handleEditSave(formData: FormData) {
     if (!editSlip) return
     setSaving(true)
@@ -61,14 +75,16 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
   }
 
   async function handleDeleteSlip(id: string) {
-    if (!confirm('یہ تنخواہ سلپ حذف کریں؟')) return
+    if (!confirm('یہ تنخواہ سلپ حذف کریں؟ اگر اس میں کوئی ایڈوانس کاٹا گیا تھا، وہ دوبارہ زیر التوا ہو جائے گا۔')) return
     setBusyId(id)
     await deleteSalarySlip(id)
     setBusyId(null)
   }
 
   const historySlips = historyFor ? slips.filter(s => s.teacher_id === historyFor.id) : []
-  const [historySearch, setHistorySearch] = useState('')
+  const historyAdvances = historyFor
+    ? advances.filter(a => a.teacher_id === historyFor.id && (!historySearch.trim() || a.date.includes(historySearch)))
+    : []
   const filteredHistory = historySlips.filter(s => !historySearch.trim() || s.month.toLowerCase().includes(historySearch.toLowerCase()))
 
   return (
@@ -88,7 +104,7 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
             {teachers.length === 0 && <tr><td colSpan={6} className="text-center text-muted py-10">ابھی کوئی فعال عملہ نہیں۔</td></tr>}
             {teachers.map(t => {
               const paidThisMonth = slips.some(s => s.teacher_id === t.id && s.month === thisMonth)
-              const pendingAdvance = t.teacher_details?.pending_advance || 0
+              const pendingAdvance = pendingAdvanceFor(t.id)
               return (
                 <tr key={t.id}>
                   <td className="px-4 py-[11px] border-b border-border">{t.full_name}</td>
@@ -108,7 +124,7 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
                     <div className="flex gap-2 flex-wrap">
                       <button onClick={() => { setGenFor(t); setFormError(null) }} className="text-[12px] bg-gold text-[#2A2205] rounded-[7px] px-3 py-[6px] font-semibold">سلپ بنائیں</button>
                       <button onClick={() => { setAdvanceFor(t); setFormError(null) }} className="text-[12px] border border-border rounded-[7px] px-3 py-[6px]">ایڈوانس دیں</button>
-                      <button onClick={() => setHistoryFor(t)} className="text-[12px] border border-border rounded-[7px] px-3 py-[6px]">تاریخ</button>
+                      <button onClick={() => { setHistoryFor(t); setHistorySearch('') }} className="text-[12px] border border-border rounded-[7px] px-3 py-[6px]">تاریخ</button>
                     </div>
                   </td>
                 </tr>
@@ -121,6 +137,7 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
       {genFor && (
         <GenerateModal
           teacher={genFor}
+          pendingAdvance={pendingAdvanceFor(genFor.id)}
           onClose={() => setGenFor(null)}
           onSubmit={handleGenerate}
           saving={saving}
@@ -135,7 +152,7 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
               <h3 className="font-display text-[16px] font-semibold">ایڈوانس دیں — {advanceFor.full_name}</h3>
               <button onClick={() => setAdvanceFor(null)} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
             </div>
-            <p className="text-[12px] text-muted mb-3">یہ رقم اگلی تنخواہ سلپ بناتے وقت خود بخود منہا ہو جائے گی۔</p>
+            <p className="text-[12px] text-muted mb-3">یہ رقم اگلی تنخواہ سلپ بناتے وقت خود بخود منہا ہو جائے گی، اور "تاریخ" میں ہمیشہ نظر آئے گی۔</p>
             <form action={handleAdvance} className="flex flex-col gap-4">
               {formError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{formError}</div>}
               <div>
@@ -152,7 +169,7 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
 
       {historyFor && (
         <div className="fixed inset-0 bg-primary-dark/35 z-50 flex justify-end" onClick={() => setHistoryFor(null)}>
-          <div className="w-[640px] max-w-[96vw] bg-surface h-full overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="w-[680px] max-w-[96vw] bg-surface h-full overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-5 border-b border-border flex justify-between items-start sticky top-0 bg-surface z-10">
               <h3 className="font-display text-[16px] font-semibold">تنخواہ کی تاریخ — {historyFor.full_name}</h3>
               <button onClick={() => setHistoryFor(null)} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
@@ -161,10 +178,12 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
               <input
                 value={historySearch}
                 onChange={e => setHistorySearch(e.target.value)}
-                placeholder="مہینہ تلاش کریں (مثلاً Jul 2026)..."
+                placeholder="مہینہ یا تاریخ تلاش کریں..."
                 className="px-3 py-[8px] border border-border rounded-[9px] text-[12.5px] w-[240px] bg-surface"
               />
             </div>
+
+            <h4 className="px-6 pt-4 pb-2 text-[13px] font-semibold text-muted">تنخواہ سلپس</h4>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[560px] text-[13px] border-collapse">
                 <thead>
@@ -195,6 +214,40 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
                 </tbody>
               </table>
             </div>
+
+            <h4 className="px-6 pt-5 pb-2 text-[13px] font-semibold text-muted">ایڈوانس کی تاریخ</h4>
+            <div className="overflow-x-auto pb-6">
+              <table className="w-full min-w-[420px] text-[13px] border-collapse">
+                <thead>
+                  <tr className="bg-[#FBF8F0]">
+                    {['تاریخ', 'رقم', 'حالت', ''].map(h => (
+                      <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-3 py-[10px] border-b border-border">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {historyAdvances.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-8">ابھی کوئی ایڈوانس نہیں دیا گیا۔</td></tr>}
+                  {historyAdvances.map(a => (
+                    <tr key={a.id}>
+                      <td className="px-3 py-[10px] border-b border-border">{a.date}</td>
+                      <td className="px-3 py-[10px] border-b border-border font-mono">{fmt(a.amount)}</td>
+                      <td className="px-3 py-[10px] border-b border-border">
+                        <span className={`badge ${a.settled ? 'bg-income-bg text-income' : 'bg-danger-bg text-danger'}`}>
+                          {a.settled ? 'کاٹا جا چکا' : 'زیر التوا'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-[10px] border-b border-border">
+                        {!a.settled && (
+                          <button onClick={() => handleDeleteAdvance(a.id)} disabled={busyId === a.id} className="text-danger hover:bg-danger-bg rounded-[6px] p-[5px] disabled:opacity-50">
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -207,13 +260,12 @@ export default function SalaryClient({ teachers, slips, loadError }: { teachers:
 }
 
 function GenerateModal({
-  teacher, onClose, onSubmit, saving, error,
-}: { teacher: Teacher; onClose: () => void; onSubmit: (fd: FormData) => void; saving: boolean; error: string | null }) {
+  teacher, pendingAdvance, onClose, onSubmit, saving, error,
+}: { teacher: Teacher; pendingAdvance: number; onClose: () => void; onSubmit: (fd: FormData) => void; saving: boolean; error: string | null }) {
   const [basic, setBasic] = useState(teacher.teacher_details?.monthly_salary || 0)
   const [bonus, setBonus] = useState(0)
   const [deductions, setDeductions] = useState(0)
-  const advance = teacher.teacher_details?.pending_advance || 0
-  const netPaid = Number(basic) + Number(bonus) - Number(deductions) - Number(advance)
+  const netPaid = Number(basic) + Number(bonus) - Number(deductions) - Number(pendingAdvance)
 
   return (
     <div className="fixed inset-0 bg-primary-dark/35 z-50 flex items-center justify-center" onClick={onClose}>
@@ -225,7 +277,6 @@ function GenerateModal({
         <form action={onSubmit} className="flex flex-col gap-4">
           {error && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{error}</div>}
           <input type="hidden" name="teacher_id" value={teacher.id} />
-          <input type="hidden" name="advance_deducted" value={advance} />
           <div>
             <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">مہینہ</label>
             <select name="month" defaultValue={currentMonthLabel()} required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
@@ -235,7 +286,6 @@ function GenerateModal({
           <div>
             <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">بنیادی تنخواہ</label>
             <input name="basic_salary" type="number" value={basic} onChange={e => setBasic(Number(e.target.value))} required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
-            <p className="text-[11px] text-muted mt-1">یہ رقم استاذ کے پروفائل سے خودکار آئی ہے، ضرورت ہو تو تبدیل کر سکتے ہیں۔</p>
           </div>
           <div>
             <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">بونس (اگر کوئی ہو)</label>
@@ -245,14 +295,14 @@ function GenerateModal({
             <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">دیگر کٹوتی (اگر کوئی ہو)</label>
             <input name="deductions" type="number" value={deductions} onChange={e => setDeductions(Number(e.target.value))} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
           </div>
-          {advance > 0 && (
+          {pendingAdvance > 0 && (
             <div className="bg-danger-bg text-danger text-[12.5px] rounded-[9px] px-3 py-2">
-              زیر التوا ایڈوانس {fmt(advance)} اس سلپ سے خود بخود منہا ہو جائے گا۔
+              زیر التوا ایڈوانس {fmt(pendingAdvance)} اس سلپ سے خود بخود منہا ہو جائے گا۔
             </div>
           )}
           <div className="bg-[#FBF8F0] rounded-[9px] p-3 text-[13px]">
             <div className="flex justify-between"><span className="text-muted">بنیادی + بونس</span><span>{fmt(Number(basic) + Number(bonus))}</span></div>
-            <div className="flex justify-between"><span className="text-muted">کٹوتی + ایڈوانس</span><span>-{fmt(Number(deductions) + Number(advance))}</span></div>
+            <div className="flex justify-between"><span className="text-muted">کٹوتی + ایڈوانس</span><span>-{fmt(Number(deductions) + Number(pendingAdvance))}</span></div>
             <div className="flex justify-between font-semibold mt-1 pt-1 border-t border-border"><span>کل ادائیگی</span><span>{fmt(netPaid)}</span></div>
           </div>
           <button type="submit" disabled={saving} className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors disabled:opacity-60">
@@ -280,6 +330,7 @@ function EditSlipModal({
           <h3 className="font-display text-[16px] font-semibold">سلپ میں ترمیم — {slip.month}</h3>
           <button onClick={onClose} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
         </div>
+        <p className="text-[11.5px] text-muted -mt-2 mb-1">نوٹ: ایڈوانس کی رقم یہاں سے بدلنے سے اصل ایڈوانس ریکارڈ تبدیل نہیں ہوتا، صرف اس سلپ کی رقم بدلتی ہے۔</p>
         <form action={onSubmit} className="flex flex-col gap-4">
           {error && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{error}</div>}
           <div>

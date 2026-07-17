@@ -6,7 +6,7 @@ export default async function SalaryPage() {
 
   const { data: staffRaw, error } = await supabase
     .from('profiles')
-    .select('id, full_name, role, teacher_details(subject, monthly_salary, pending_advance)')
+    .select('id, full_name, role, teacher_details(subject, monthly_salary)')
     .in('role', ['teacher', 'nazim'])
     .eq('status', 'Active')
 
@@ -20,5 +20,10 @@ export default async function SalaryPage() {
     .select('id, teacher_id, month, basic_salary, bonus, deductions, advance_deducted, net_paid, created_at')
     .order('created_at', { ascending: false })
 
-  return <SalaryClient teachers={teachers} slips={slips || []} loadError={error?.message} />
+  const { data: advances } = await supabase
+    .from('salary_advances')
+    .select('id, teacher_id, amount, date, settled, settled_in_slip_id')
+    .order('date', { ascending: false })
+
+  return <SalaryClient teachers={teachers} slips={slips || []} advances={advances || []} loadError={error?.message} />
 }

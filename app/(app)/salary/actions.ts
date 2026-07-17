@@ -4,6 +4,13 @@ import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { todayPKT } from '@/lib/date'
 
+function revalidateAll() {
+  revalidatePath('/salary')
+  revalidatePath('/expenses')
+  revalidatePath('/dashboard')
+  revalidatePath('/teachers')
+}
+
 export async function generateSalary(formData: FormData) {
   const supabase = await createClient()
   const profile = await getCurrentProfile()
@@ -13,8 +20,6 @@ export async function generateSalary(formData: FormData) {
   const basic_salary = Number(formData.get('basic_salary') || 0)
   const bonus = Number(formData.get('bonus') || 0)
   const deductions = Number(formData.get('deductions') || 0)
-  const advance_deducted = Number(formData.get('advance_deducted') || 0)
-  const net_paid = basic_salary + bonus - deductions - advance_deducted
 
   const { data: existing } = await supabase
     .from('salary_slips')
@@ -27,14 +32,26 @@ export async function generateSalary(formData: FormData) {
     return { error: 'اس مہینے کی تنخواہ سلپ پہلے سے بن چکی ہے۔' }
   }
 
-  const { error } = await supabase.from('salary_slips').insert({
+  // Authoritative pending-advance figure, computed server-side (never trust the client for this)
+  const { data: unsettled } = await supabase
+    .from('salary_advances')
+    .select('id, amount')
+    .eq('teacher_id', teacher_id)
+    .eq('settled', false)
+
+  const advance_deducted = (unsettled || []).reduce((s, r) => s + Number(r.amount), 0)
+  const net_paid = basic_salary + bonus - deductions - advance_deducted
+
+  const { data: newSlip, error } = await supabase.from('salary_slips').insert({
     teacher_id, month, basic_salary, bonus, deductions, advance_deducted, net_paid, generated_by: profile?.id,
-  })
+  }).select('id').single()
   if (error) return { error: error.message }
 
-  // The pending advance has now been deducted — reset it
-  if (advance_deducted > 0) {
-    await supabase.from('teacher_details').update({ pending_advance: 0 }).eq('teacher_id', teacher_id)
+  // Mark exactly the advances we just accounted for as settled, linked to this slip
+  if (unsettled && unsettled.length > 0) {
+    await supabase.from('salary_advances')
+      .update({ settled: true, settled_in_slip_id: newSlip.id })
+      .in('id', unsettled.map(r => r.id))
   }
 
   const { data: teacherRow } = await supabase.from('profiles').select('full_name').eq('id', teacher_id).single()
@@ -48,10 +65,7 @@ export async function generateSalary(formData: FormData) {
     date: todayPKT(),
   })
 
-  revalidatePath('/salary')
-  revalidatePath('/expenses')
-  revalidatePath('/dashboard')
-  revalidatePath('/teachers')
+  revalidateAll()
   return { error: null }
 }
 
@@ -68,8 +82,7 @@ export async function updateSalarySlip(slipId: string, formData: FormData) {
     basic_salary, bonus, deductions, advance_deducted, net_paid,
   }).eq('id', slipId)
 
-  revalidatePath('/salary')
-  revalidatePath('/dashboard')
+  revalidateAll()
   return { error: error?.message || null }
 }
 
@@ -81,6 +94,11 @@ export async function deleteSalarySlip(slipId: string) {
     .select('teacher_id, month, net_paid, profiles(full_name)')
     .eq('id', slipId)
     .single()
+
+  // Un-settle any advances this slip had deducted, so they go back to "pending"
+  await supabase.from('salary_advances')
+    .update({ settled: false, settled_in_slip_id: null })
+    .eq('settled_in_slip_id', slipId)
 
   const { error } = await supabase.from('salary_slips').delete().eq('id', slipId)
   if (error) return { error: error.message }
@@ -96,28 +114,34 @@ export async function deleteSalarySlip(slipId: string) {
       .eq('notes', expectedNotes)
   }
 
-  revalidatePath('/salary')
-  revalidatePath('/expenses')
-  revalidatePath('/dashboard')
+  revalidateAll()
   return { error: null }
 }
 
 export async function addAdvance(teacherId: string, amount: number) {
   const supabase = await createClient()
+  const profile = await getCurrentProfile()
 
-  const { data: existing } = await supabase
-    .from('teacher_details')
-    .select('pending_advance')
-    .eq('teacher_id', teacherId)
-    .maybeSingle()
+  const { error } = await supabase.from('salary_advances').insert({
+    teacher_id: teacherId,
+    amount,
+    date: todayPKT(),
+    given_by: profile?.id,
+  })
 
-  const newAmount = Number(existing?.pending_advance || 0) + amount
+  revalidateAll()
+  return { error: error?.message || null }
+}
 
-  const { error } = await supabase
-    .from('teacher_details')
-    .upsert({ teacher_id: teacherId, pending_advance: newAmount }, { onConflict: 'teacher_id' })
+export async function deleteAdvance(advanceId: string) {
+  const supabase = await createClient()
 
-  revalidatePath('/salary')
-  revalidatePath('/teachers')
+  const { data: advance } = await supabase.from('salary_advances').select('settled').eq('id', advanceId).single()
+  if (advance?.settled) {
+    return { error: 'یہ ایڈوانس پہلے سے ایک تنخواہ سلپ میں کاٹا جا چکا ہے، اسے حذف نہیں کیا جا سکتا۔' }
+  }
+
+  const { error } = await supabase.from('salary_advances').delete().eq('id', advanceId)
+  revalidateAll()
   return { error: error?.message || null }
 }
