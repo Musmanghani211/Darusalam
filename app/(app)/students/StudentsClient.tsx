@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { Search, X, Trash2 } from 'lucide-react'
 import { addStudent, updateStudent, deleteStudent } from './actions'
 import { statusLabel, feeStatusLabel } from '@/lib/labels'
+import { currentMonthLabel } from '@/lib/months'
 
 type Student = {
   id: string
@@ -31,7 +32,7 @@ export default function StudentsClient({
   students: Student[]
   classes: { id: string; name: string; teacher_id: string | null }[]
   teachers: { id: string; full_name: string }[]
-  feesByStudent: { student_id: string; status: string }[]
+  feesByStudent: { student_id: string; status: string; month: string }[]
   loadError?: string
 }) {
   const [search, setSearch] = useState('')
@@ -59,8 +60,9 @@ export default function StudentsClient({
 
   const canManage = role === 'mohtamim' || role === 'nazim'
 
+  const thisMonth = currentMonthLabel()
   const feeStatusFor = (studentId: string) => {
-    const row = feesByStudent.find(f => f.student_id === studentId)
+    const row = feesByStudent.find(f => f.student_id === studentId && f.month === thisMonth)
     return row?.status || 'Pending'
   }
 

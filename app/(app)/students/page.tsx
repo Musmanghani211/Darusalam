@@ -23,7 +23,7 @@ export default async function StudentsPage() {
   }))
   const { data: teachers } = await supabase.from('profiles').select('id, full_name').eq('role', 'teacher')
 
-  const { data: feesByStudent } = await supabase.from('fees').select('student_id, status').order('created_at', { ascending: false })
+const { data: feesByStudent } = await supabase.from('fees').select('student_id, status, month').order('created_at', { ascending: false })
 
   const normalized = (students || []).map((s: any) => ({
     ...s,
