@@ -18,12 +18,12 @@ export default async function SalaryPage() {
   const { data: slips } = await supabase
     .from('salary_slips')
     .select('id, teacher_id, month, basic_salary, bonus, deductions, advance_deducted, net_paid, created_at')
-    .order('created_at', { ascending: false })
+    .order('created_at', { ascending: true })
 
   const { data: advances } = await supabase
     .from('salary_advances')
     .select('id, teacher_id, amount, date, settled, settled_in_slip_id')
-    .order('date', { ascending: false })
+    .order('date', { ascending: true })
 
   return <SalaryClient teachers={teachers} slips={slips || []} advances={advances || []} loadError={error?.message} />
 }
