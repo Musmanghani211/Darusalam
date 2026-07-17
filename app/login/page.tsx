@@ -1,9 +1,10 @@
 import { login } from './actions'
 import SubmitButton from '@/components/SubmitButton'
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
-}: { searchParams: { error?: string } }) {
+}: { searchParams: Promise<{ error?: string }> }) {
+  const params = await searchParams
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg px-4">
       <div className="w-full max-w-[380px]">
@@ -22,9 +23,9 @@ export default function LoginPage({
           <h1 className="font-display text-[21px] font-semibold mb-1">لاگ ان</h1>
           <p className="text-[13.5px] text-muted mb-6">وہ ای میل اور پاس ورڈ استعمال کریں جو مہتمم نے آپ کے لیے بنایا ہے۔</p>
 
-          {searchParams?.error && (
+          {params?.error && (
             <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">
-              {searchParams.error}
+              {params.error}
             </div>
           )}
 

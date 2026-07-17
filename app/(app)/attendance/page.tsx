@@ -4,10 +4,11 @@ import AttendanceClient from './AttendanceClient'
 
 export default async function AttendancePage({
   searchParams,
-}: { searchParams: { date?: string } }) {
+}: { searchParams: Promise<{ date?: string }> }) {
   const profile = await getCurrentProfile()
   const supabase = await createClient()
-  const selectedDate = searchParams?.date || todayPKT()
+  const params = await searchParams
+  const selectedDate = params?.date || todayPKT()
 
   let studentQuery = supabase.from('students').select('id, full_name, phone, guardian_name, classes(name)').eq('status', 'Active')
   if (profile?.role === 'teacher') studentQuery = studentQuery.eq('teacher_id', profile.id)
