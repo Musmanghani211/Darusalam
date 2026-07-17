@@ -62,7 +62,7 @@ export default function DashboardClient({
   const monthlyRows = useMemo(() => {
     const base = new Date(monthStart + 'T00:00:00')
     const rows = []
-    for (let i = 0; i >=5; i--) {
+    for (let i = 0; i >=5; i++) {
       const d = new Date(base.getFullYear(), base.getMonth() - i, 1)
       const label = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`
       const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
