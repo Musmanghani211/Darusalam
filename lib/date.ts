@@ -17,3 +17,11 @@ export function formatDatePKT(dateStr: string): string {
     day: '2-digit', month: 'short', year: 'numeric',
   })
 }
+
+const URDU_MONTHS_FULL = ['جنوری','فروری','مارچ','اپریل','مئی','جون','جولائی','اگست','ستمبر','اکتوبر','نومبر','دسمبر']
+
+// e.g. "20 جولائی 2026" — for messages sent to parents/staff
+export function formatDateUrdu(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  return `${String(d.getDate()).padStart(2, '0')} ${URDU_MONTHS_FULL[d.getMonth()]} ${d.getFullYear()}`
+}

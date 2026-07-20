@@ -4,7 +4,7 @@ import { useState, useTransition, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, MessageCircle, Eye } from 'lucide-react'
 import { markAttendance, getStudentAttendanceHistory } from './actions'
-import { todayPKT, formatDatePKT } from '@/lib/date'
+import { todayPKT, formatDatePKT, formatDateUrdu } from '@/lib/date'
 
 type Student = { id: string; full_name: string; phone: string | null; guardian_name: string | null; classes: { name: string } | null }
 type Teacher = { id: string; full_name: string }
@@ -48,7 +48,7 @@ export default function AttendanceClient({
 
   function sendWhatsApp(student: Student) {
     const num = whatsappNumber(student.phone || '')
-    const dateLabel = formatDatePKT(selectedDate)
+    const dateLabel = formatDateUrdu(selectedDate)
     const msg = `السلام علیکم ${student.guardian_name || ''}، آپ کے بچے ${student.full_name} کو آج (${dateLabel}) قصر السلام مدرسہ میں غیر حاضر لگایا گیا ہے۔ ضرورت پڑنے پر انتظامیہ سے رابطہ کریں۔`
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
     setNotifyStudent(null)

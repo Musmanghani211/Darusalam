@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { X, Trash2, Search, MessageCircle, Printer } from 'lucide-react'
 import { collectFee, addFeeEntry, deleteFeeEntry } from './actions'
 import { feeStatusLabel } from '@/lib/labels'
-import { monthOptions, currentMonthLabel } from '@/lib/months'
+import { monthOptions, currentMonthLabel, urduMonthLabel, fmtUrdu } from '@/lib/months'
 
 type StudentInfo = { full_name: string; phone: string | null; guardian_name: string | null; classes: { name: string } | null }
 type Fee = {
@@ -98,7 +98,7 @@ export default function FeesClient({
   function sendReminder(t: { name: string; guardian: string | null; phone: string | null; months: string[]; total: number }) {
     if (!t.phone) return
     const num = whatsappNumber(t.phone)
-    const msg = `السلام علیکم ${t.guardian || ''}، آپ کے بچے ${t.name} کی درج ذیل مہینوں کی فیس ابھی زیر التوا ہے: ${t.months.join('، ')} — کل رقم ${fmt(t.total)}۔ براہ کرم جلد از جلد ادائیگی کریں۔ شکریہ، قصر السلام مدرسہ`
+    const msg = `السلام علیکم ${t.guardian || ''}، آپ کے بچے ${t.name} کی درج ذیل مہینوں کی فیس ابھی زیر التوا ہے: ${t.months.map(urduMonthLabel).join('، ')} — کل رقم ${fmtUrdu(t.total)}۔ براہ کرم جلد از جلد ادائیگی کریں۔ شکریہ، قصر السلام مدرسہ`
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
     setNotifyTarget(null)
   }

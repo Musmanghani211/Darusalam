@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Trash2, Pencil } from 'lucide-react'
+import { X, Trash2, Pencil, Printer } from 'lucide-react'
 import { generateSalary, deleteSalarySlip, addAdvance, updateSalarySlip, deleteAdvance } from './actions'
 import { monthOptions, currentMonthLabel } from '@/lib/months'
 
@@ -79,6 +79,51 @@ export default function SalaryClient({ teachers, slips, advances, loadError }: {
     setBusyId(id)
     await deleteSalarySlip(id)
     setBusyId(null)
+  }
+
+  function printSlip(s: Slip) {
+    const teacherName = historyFor?.full_name || teachers.find(t => t.id === s.teacher_id)?.full_name || '-'
+    const teacherRole = (historyFor?.role || teachers.find(t => t.id === s.teacher_id)?.role) === 'nazim' ? 'ناظم' : 'استاذ'
+    const win = window.open('', '_blank', 'width=460,height=640')
+    if (!win) return
+    win.document.write(`
+      <html dir="rtl" lang="ur">
+      <head>
+        <title>تنخواہ سلپ</title>
+        <style>
+          body { font-family: 'Noto Nastaliq Urdu', 'Noto Sans Arabic', sans-serif; padding: 28px; color: #24291F; }
+          h2 { margin: 0 0 4px; }
+          .sub { color: #767C6C; font-size: 13px; margin-bottom: 22px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+          td { padding: 8px 0; border-bottom: 1px dashed #E7DFC9; font-size: 14px; }
+          td:first-child { color: #767C6C; }
+          td:last-child { text-align: left; font-weight: 600; }
+          .section { margin-top: 18px; font-size: 12px; color: #767C6C; text-transform: uppercase; }
+          .net { color: #2E6B57; font-size: 19px; font-weight: 700; }
+        </style>
+      </head>
+      <body>
+        <h2>قصر السلام مدرسہ</h2>
+        <div class="sub">تنخواہ سلپ — ${s.month}</div>
+        <table>
+          <tr><td>نام</td><td>${teacherName}</td></tr>
+          <tr><td>کردار</td><td>${teacherRole}</td></tr>
+        </table>
+        <div class="section">تفصیل</div>
+        <table>
+          <tr><td>بنیادی تنخواہ</td><td>${fmt(s.basic_salary)}</td></tr>
+          ${s.bonus ? `<tr><td>بونس</td><td>+${fmt(s.bonus)}</td></tr>` : ''}
+          ${s.deductions ? `<tr><td>دیگر کٹوتی</td><td>-${fmt(s.deductions)}</td></tr>` : ''}
+          ${s.advance_deducted ? `<tr><td>ایڈوانس کاٹا گیا</td><td>-${fmt(s.advance_deducted)}</td></tr>` : ''}
+          <tr><td>کل ادائیگی</td><td class="net">${fmt(s.net_paid)}</td></tr>
+        </table>
+      </body>
+      </html>
+    `)
+    win.document.close()
+    win.focus()
+    win.print()
+    win.close()
   }
 
   const historySlips = historyFor ? slips.filter(s => s.teacher_id === historyFor.id) : []
@@ -205,6 +250,7 @@ export default function SalaryClient({ teachers, slips, advances, loadError }: {
                       <td className="px-3 py-[10px] border-b border-border font-mono font-semibold">{fmt(s.net_paid)}</td>
                       <td className="px-3 py-[10px] border-b border-border">
                         <div className="flex gap-1">
+                          <button onClick={() => printSlip(s)} className="text-muted hover:bg-[#F1ECDD] rounded-[6px] p-[5px]"><Printer size={13} /></button>
                           <button onClick={() => { setEditSlip(s); setFormError(null) }} className="text-muted hover:bg-[#F1ECDD] rounded-[6px] p-[5px]"><Pencil size={13} /></button>
                           <button onClick={() => handleDeleteSlip(s.id)} disabled={busyId === s.id} className="text-danger hover:bg-danger-bg rounded-[6px] p-[5px] disabled:opacity-50"><Trash2 size={13} /></button>
                         </div>
