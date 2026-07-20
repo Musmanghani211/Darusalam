@@ -6,7 +6,7 @@ export default async function FeesPage() {
 
   const { data: fees, error } = await supabase
     .from('fees')
-    .select('id, month, amount, status, paid_on, students(full_name, classes(name))')
+    .select('id, student_id, month, amount, status, paid_on, students(full_name, phone, guardian_name, classes(name))')
     .order('created_at', { ascending: false })
 
   const normalized = (fees || []).map((f: any) => ({
@@ -17,7 +17,17 @@ export default async function FeesPage() {
     students: f.students ? { ...f.students, classes: Array.isArray(f.students.classes) ? (f.students.classes[0] ?? null) : f.students.classes } : null,
   }))
 
-  const { data: students } = await supabase.from('students').select('id, full_name').eq('status', 'Active')
+  const { data: students } = await supabase
+    .from('students')
+    .select('id, full_name, phone, guardian_name, classes(name)')
+    .eq('status', 'Active')
 
-  return <FeesClient fees={normalized} students={students || []} loadError={error?.message} />
+  const normalizedStudents = (students || []).map((s: any) => ({
+    ...s,
+    classes: Array.isArray(s.classes) ? (s.classes[0] ?? null) : s.classes,
+  }))
+
+  const { data: classes } = await supabase.from('classes').select('id, name')
+
+  return <FeesClient fees={normalized} students={normalizedStudents} classes={classes || []} loadError={error?.message} />
 }
