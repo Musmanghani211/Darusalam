@@ -98,7 +98,12 @@ export default function FeesClient({
   function sendReminder(t: { name: string; guardian: string | null; phone: string | null; months: string[]; total: number }) {
     if (!t.phone) return
     const num = whatsappNumber(t.phone)
-    const msg = `السلام علیکم ${t.guardian || ''}، آپ کے بچے ${t.name} کی درج ذیل مہینوں کی فیس ابھی زیر التوا ہے: ${t.months.map(urduMonthLabel).join('، ')} — کل رقم ${fmtUrdu(t.total)}۔ براہ کرم جلد از جلد ادائیگی کریں۔ شکریہ، قصر السلام مدرسہ`
+    const urduMonths = t.months.map(urduMonthLabel)
+
+    const msg = urduMonths.length === 1
+      ? `السلام علیکم ${t.guardian || ''}، آپ کے بچے ${t.name} کی ${urduMonths[0]} کی فیس ابھی زیر التوا ہے — رقم ${fmtUrdu(t.total)}۔ براہ کرم جلد از جلد ادائیگی کریں۔ شکریہ، قصر السلام مدرسہ`
+      : `السلام علیکم ${t.guardian || ''}، آپ کے بچے ${t.name} کی درج ذیل مہینوں کی فیسیں ابھی زیر التوا ہیں: ${urduMonths.join('، ')} — کل رقم ${fmtUrdu(t.total)}۔ براہ کرم جلد از جلد ادائیگی کریں۔ شکریہ، قصر السلام مدرسہ`
+
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
     setNotifyTarget(null)
   }
