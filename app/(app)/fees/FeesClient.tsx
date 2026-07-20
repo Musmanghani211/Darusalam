@@ -25,6 +25,15 @@ function fmt(n: number) {
   return 'Rs ' + Number(n).toLocaleString('en-PK')
 }
 
+const MONTH_ORDER: Record<string, string> = {
+  Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06',
+  Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12',
+}
+function monthSortKey(label: string) {
+  const [mon, year] = label.split(' ')
+  return `${year}-${MONTH_ORDER[mon] || '00'}`
+}
+
 export default function FeesClient({
   fees, students, classes, loadError,
 }: { fees: Fee[]; students: StudentOption[]; classes: ClassOption[]; loadError?: string }) {
@@ -46,8 +55,8 @@ export default function FeesClient({
       rows = rows.filter(f => (f.students?.full_name || '').toLowerCase().includes(q) || f.month.toLowerCase().includes(q))
     }
     rows = [...rows].sort((a, b) => {
-      const da = a.paid_on || '0000'; const db = b.paid_on || '0000'
-      return sortOrder === 'latest' ? db.localeCompare(da) : da.localeCompare(db)
+      const ka = monthSortKey(a.month); const kb = monthSortKey(b.month)
+      return sortOrder === 'latest' ? kb.localeCompare(ka) : ka.localeCompare(kb)
     })
     return rows
   }, [fees, filter, search, sortOrder])
