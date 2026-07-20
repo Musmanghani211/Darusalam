@@ -25,3 +25,11 @@ export function formatDateUrdu(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00')
   return `${String(d.getDate()).padStart(2, '0')} ${URDU_MONTHS_FULL[d.getMonth()]} ${d.getFullYear()}`
 }
+
+const URDU_DAYS = ['اتوار','پیر','منگل','بدھ','جمعرات','جمعہ','ہفتہ']
+
+// e.g. "پیر" for a given date
+export function urduDayName(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  return URDU_DAYS[d.getDay()]
+}

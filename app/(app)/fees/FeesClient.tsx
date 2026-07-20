@@ -95,14 +95,31 @@ export default function FeesClient({
     setBusyId(null)
   }
 
-  function sendReminder(t: { name: string; guardian: string | null; phone: string | null; months: string[]; total: number }) {
+function sendReminder(t: { name: string; guardian: string | null; phone: string | null; months: string[]; total: number }) {
     if (!t.phone) return
     const num = whatsappNumber(t.phone)
     const urduMonths = t.months.map(urduMonthLabel)
 
     const msg = urduMonths.length === 1
-      ? `السلام علیکم ${t.guardian || ''}، آپ کے بچے ${t.name} کی ${urduMonths[0]} کی فیس ابھی زیر التوا ہے — رقم ${fmtUrdu(t.total)}۔ براہ کرم جلد از جلد ادائیگی کریں۔ شکریہ، قصر السلام مدرسہ`
-      : `السلام علیکم ${t.guardian || ''}، آپ کے بچے ${t.name} کی درج ذیل مہینوں کی فیسیں ابھی زیر التوا ہیں: ${urduMonths.join('، ')} — کل رقم ${fmtUrdu(t.total)}۔ براہ کرم جلد از جلد ادائیگی کریں۔ شکریہ، قصر السلام مدرسہ`
+      ? `السلام علیکم ورحمۃ اللّٰہ وبرکاتہ
+محترم جناب ${t.guardian || ''} صاحب
+اطلاعاً عرض ہیکہ آپکا بچہ
+${t.name} کی ${urduMonths[0]} کی فیس تاحال جمع نہیں ہوئی
+رقم: ${fmtUrdu(t.total)}
+نوٹ: براہ کرم جلد از جلد فیس جمع کروائیں، تاخیر کی صورت میں داخلہ متاثر ہو سکتا ہے
+لہٰذا مہربانی فرما کر مدرسہ سے رابطہ کریں
+منجانب : مدرسہ انتظامیہ
+(قصر السلام)`
+      : `السلام علیکم ورحمۃ اللّٰہ وبرکاتہ
+محترم جناب ${t.guardian || ''} صاحب
+اطلاعاً عرض ہیکہ آپکا بچہ
+${t.name} کی درج ذیل مہینوں کی فیس تاحال جمع نہیں ہوئی:
+${urduMonths.join('، ')}
+کل رقم: ${fmtUrdu(t.total)}
+نوٹ: براہ کرم جلد از جلد فیس جمع کروائیں، تاخیر کی صورت میں داخلہ متاثر ہو سکتا ہے
+لہٰذا مہربانی فرما کر مدرسہ سے رابطہ کریں
+منجانب : مدرسہ انتظامیہ
+(قصر السلام)`
 
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
     setNotifyTarget(null)
