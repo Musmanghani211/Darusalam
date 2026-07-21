@@ -31,6 +31,8 @@ type Student = {
   manzil: string | null
   class_id: string | null
   teacher_id: string | null
+  monthly_fee: number
+  fee_type: string
   classes: { name: string } | null
   profiles: { full_name: string } | null
 }
@@ -57,6 +59,7 @@ export default function StudentsClient({
   const [selected, setSelected] = useState<Student | null>(null)
   const [editMode, setEditMode] = useState(false)
   const [editClassId, setEditClassId] = useState('')
+  const [editFeeType, setEditFeeType] = useState('Regular')
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -75,6 +78,7 @@ export default function StudentsClient({
   }
   const [showAddForm, setShowAddForm] = useState(false)
   const [addClassId, setAddClassId] = useState('')
+  const [addFeeType, setAddFeeType] = useState('Regular')
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
@@ -148,7 +152,7 @@ export default function StudentsClient({
         </div>
         {canManage && (
           <button
-            onClick={() => { setShowAddForm(true); setAddClassId('') }}
+            onClick={() => { setShowAddForm(true); setAddClassId(''); setAddFeeType('Regular') }}
             className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors"
           >
             + نیا داخلہ
@@ -220,6 +224,12 @@ export default function StudentsClient({
                   <DlRow label="مقرر استاذ" value={selected.profiles?.full_name || '-'} />
                   <DlRow label="حالت" value={statusLabel[selected.status] || selected.status} />
                 </DlGroup>
+                <DlGroup title="فیس کی تفصیل">
+                  <DlRow label="فیس کی قسم" value={selected.fee_type === 'Sabeel Lillah' ? 'سبیل للہ (معاف)' : 'باقاعدہ'} />
+                  {selected.fee_type !== 'Sabeel Lillah' && (
+                    <DlRow label="ماہانہ فیس" value={`Rs ${Number(selected.monthly_fee || 0).toLocaleString('en-PK')}`} />
+                  )}
+                </DlGroup>
 
                 <div className="mb-[18px]">
                   <div className="flex items-center justify-between mb-[9px]">
@@ -249,7 +259,7 @@ export default function StudentsClient({
 
                 {canManage && (
                   <div className="flex gap-2">
-                    <button onClick={() => { setEditMode(true); setEditClassId(selected.class_id || '') }} className="flex-1 bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors">
+                    <button onClick={() => { setEditMode(true); setEditClassId(selected.class_id || ''); setEditFeeType(selected.fee_type || 'Regular') }} className="flex-1 bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors">
                       طالب علم میں ترمیم کریں
                     </button>
                     <button
@@ -315,6 +325,19 @@ export default function StudentsClient({
                     <option value="Inactive">غیر فعال</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">فیس کی قسم</label>
+                  <select name="fee_type" value={editFeeType} onChange={e => setEditFeeType(e.target.value)} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+                    <option value="Regular">باقاعدہ</option>
+                    <option value="Sabeel Lillah">سبیل للہ (معاف)</option>
+                  </select>
+                </div>
+                {editFeeType !== 'Sabeel Lillah' && (
+                  <div>
+                    <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">ماہانہ فیس</label>
+                    <input name="monthly_fee" type="number" defaultValue={selected.monthly_fee || 0} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setEditMode(false)} className="flex-1 border border-border rounded-[9px] py-[10px] text-[13.5px] font-semibold">منسوخ</button>
                   <button type="submit" disabled={editSaving} className="flex-1 bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors disabled:opacity-60">
@@ -388,6 +411,17 @@ export default function StudentsClient({
                   <p className="text-[11px] text-muted mt-1">اس کلاس کے ساتھ ابھی کوئی استاذ منسلک نہیں — پہلے Classes میں جا کر استاذ مقرر کریں۔</p>
                 )}
               </div>
+
+              <div>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">فیس کی قسم</label>
+                <select name="fee_type" value={addFeeType} onChange={e => setAddFeeType(e.target.value)} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+                  <option value="Regular">باقاعدہ</option>
+                  <option value="Sabeel Lillah">سبیل للہ (معاف)</option>
+                </select>
+              </div>
+              {addFeeType !== 'Sabeel Lillah' && (
+                <Field label="ماہانہ فیس" name="monthly_fee" placeholder="مثلاً 2000" />
+              )}
 
               <button
                 type="submit"

@@ -4,17 +4,40 @@ import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { todayPKT } from '@/lib/date'
 
-export async function collectFee(feeId: string) {
+export async function collectFee(params: { feeId?: string; studentId?: string; month?: string; amount?: number }) {
   const supabase = await createClient()
   const profile = await getCurrentProfile()
   const today = todayPKT()
 
-  const { error } = await supabase.from('fees').update({
-    status: 'Paid', paid_on: today, collected_by: profile?.id,
-  }).eq('id', feeId)
+  if (params.feeId) {
+    const { error } = await supabase.from('fees').update({
+      status: 'Paid', paid_on: today, collected_by: profile?.id,
+    }).eq('id', params.feeId)
 
-  revalidatePath('/fees')
-  return { error: error?.message || null }
+    revalidatePath('/fees')
+    revalidatePath('/dashboard')
+    revalidatePath('/income')
+    return { error: error?.message || null }
+  }
+
+  // Virtual (auto-generated) recurring fee — no row exists yet, create it as Paid directly.
+  if (params.studentId && params.month) {
+    const { error } = await supabase.from('fees').insert({
+      student_id: params.studentId,
+      month: params.month,
+      amount: params.amount || 0,
+      status: 'Paid',
+      paid_on: today,
+      collected_by: profile?.id,
+    })
+
+    revalidatePath('/fees')
+    revalidatePath('/dashboard')
+    revalidatePath('/income')
+    return { error: error?.message || null }
+  }
+
+  return { error: 'Invalid request' }
 }
 
 export async function addFeeEntry(formData: FormData) {

@@ -7,7 +7,7 @@ export default async function StudentsPage() {
 
   let query = supabase
     .from('students')
-    .select('id, admission_no, full_name, status, guardian_name, phone, cnic_or_bform, address, admission_date, current_sabaq, sabqi, manzil, class_id, teacher_id, classes(name), profiles!students_teacher_id_fkey(full_name)')
+    .select('id, admission_no, full_name, status, guardian_name, phone, cnic_or_bform, address, admission_date, current_sabaq, sabqi, manzil, class_id, teacher_id, monthly_fee, fee_type, classes(name), profiles!students_teacher_id_fkey(full_name)')
     .order('created_at', { ascending: false })
 
   if (profile?.role === 'teacher') {
