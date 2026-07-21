@@ -20,7 +20,7 @@ const config: Config = {
       },
       fontFamily: {
         display: ['"Noto Nastaliq Urdu"', 'serif'],
-        sans: ['"Noto Sans Arabic"', 'sans-serif'],
+        sans: ['"Noto Nastaliq Urdu"', 'serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       borderRadius: {

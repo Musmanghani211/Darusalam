@@ -4,12 +4,13 @@ import { useState, useMemo } from 'react'
 import { X, Trash2, Search, MessageCircle, Printer } from 'lucide-react'
 import { collectFee, addFeeEntry, deleteFeeEntry } from './actions'
 import { feeStatusLabel } from '@/lib/labels'
-import { monthOptions, currentMonthLabel, urduMonthLabel, fmtUrdu } from '@/lib/months'
+import { monthOptions, currentMonthLabel, urduMonthLabel } from '@/lib/months'
 
 type StudentInfo = { full_name: string; phone: string | null; guardian_name: string | null; classes: { name: string } | null }
 type Fee = {
   id: string; student_id: string; month: string; amount: number; status: string; paid_on: string | null
   students: StudentInfo | null
+  isVirtual?: boolean
 }
 type StudentOption = { id: string; full_name: string; phone: string | null; guardian_name: string | null; classes: { name: string } | null }
 type ClassOption = { id: string; name: string }
@@ -82,9 +83,13 @@ export default function FeesClient({
     return Array.from(map.values())
   }, [fees])
 
-  async function handleCollect(id: string) {
-    setBusyId(id)
-    await collectFee(id)
+  async function handleCollect(f: Fee) {
+    setBusyId(f.id)
+    if (f.isVirtual) {
+      await collectFee({ studentId: f.student_id, month: f.month, amount: f.amount })
+    } else {
+      await collectFee({ feeId: f.id })
+    }
     setBusyId(null)
   }
 
@@ -101,8 +106,14 @@ export default function FeesClient({
     const urduMonths = t.months.map(urduMonthLabel)
 
     const msg = urduMonths.length === 1
-      ? `السلام علیکم ${t.guardian || ''}، آپ کے بچے ${t.name} کی ${urduMonths[0]} کی فیس ابھی زیر التوا ہے — رقم ${fmtUrdu(t.total)}۔ براہ کرم جلد از جلد ادائیگی کریں۔ شکریہ، قصر السلام مدرسہ`
-      : `السلام علیکم ${t.guardian || ''}، آپ کے بچے ${t.name} کی درج ذیل مہینوں کی فیسیں ابھی زیر التوا ہیں: ${urduMonths.join('، ')} — کل رقم ${fmtUrdu(t.total)}۔ براہ کرم جلد از جلد ادائیگی کریں۔ شکریہ، قصر السلام مدرسہ`
+      ? `السلام علیکم ورحمۃ اللّٰہ وبرکاتہ
+محترم جناب ${t.guardian || ''} صاحب
+اطلاعاً عرض ہیکہ آپکے بچے ${t.name} کی گزشتہ ${urduMonths[0]} ماہ کی فیس ابھی تک جمع نہیں ہوئی ہے لہٰذا مہربانی فرما کر فیس جمع کروا دیں`
+      : `السلام علیکم ورحمۃ اللّٰہ وبرکاتہ
+محترم جناب ${t.guardian || ''} صاحب
+اطلاعاً عرض ہیکہ آپکے بچے ${t.name} کی درج ذیل مہینوں کی فیس ابھی تک جمع نہیں ہوئی ہے:
+${urduMonths.map(m => `• ${m}`).join('\n')}
+لہٰذا مہربانی فرما کر فیس جمع کروا دیں`
 
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank')
     setNotifyTarget(null)
@@ -216,7 +227,7 @@ export default function FeesClient({
                 </td>
                 <td className="px-4 py-[11px] border-b border-border">
                   {f.status === 'Pending' ? (
-                    <button onClick={() => handleCollect(f.id)} disabled={busyId === f.id} className="text-[12px] bg-gold text-[#2A2205] rounded-[7px] px-3 py-[6px] font-semibold disabled:opacity-60">
+                    <button onClick={() => handleCollect(f)} disabled={busyId === f.id} className="text-[12px] bg-gold text-[#2A2205] rounded-[7px] px-3 py-[6px] font-semibold disabled:opacity-60">
                       {busyId === f.id ? 'محفوظ ہو رہا ہے...' : 'وصول کریں'}
                     </button>
                   ) : (
@@ -224,9 +235,11 @@ export default function FeesClient({
                   )}
                 </td>
                 <td className="px-4 py-[11px] border-b border-border">
-                  <button onClick={() => handleDelete(f.id)} disabled={busyId === f.id} className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50">
-                    <Trash2 size={14} />
-                  </button>
+                  {!f.isVirtual && (
+                    <button onClick={() => handleDelete(f.id)} disabled={busyId === f.id} className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50">
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
