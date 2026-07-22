@@ -27,8 +27,15 @@ export async function addClass(formData: FormData) {
 export async function updateClassTeacher(classId: string, teacherId: string | null) {
   const supabase = await createClient()
   const { error } = await supabase.from('classes').update({ teacher_id: teacherId }).eq('id', classId)
+  if (error) return { error: error.message }
+
+  // Keep every student in this class in sync with the class's teacher —
+  // otherwise students keep showing whichever teacher they had before,
+  // even after the class itself is reassigned.
+  await supabase.from('students').update({ teacher_id: teacherId }).eq('class_id', classId)
+
   revalidateAll()
-  return { error: error?.message || null }
+  return { error: null }
 }
 
 export async function deleteClass(classId: string) {
