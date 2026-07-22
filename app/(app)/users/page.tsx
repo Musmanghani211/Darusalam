@@ -7,6 +7,7 @@ export default async function UsersPage() {
   const { data: users, error } = await supabase
     .from('profiles')
     .select('id, full_name, role, status')
+    .eq('role', 'mohtamim')
     .order('created_at', { ascending: false })
 
   return <UsersClient users={users || []} currentUserId={profile?.id || ''} loadError={error?.message} />

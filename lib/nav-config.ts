@@ -13,7 +13,7 @@ export const navConfig: Record<string, NavItem[]> = {
     { href: '/expenses', label: 'اخراجات', key: 'expenses' },
     { href: '/reports', label: 'رپورٹس', key: 'reports' },
     { href: '/progress', label: 'طلبہ کی پیش رفت', key: 'progress' },
-    { href: '/users', label: 'صارف کا انتظام', key: 'users' },
+    { href: '/users', label: 'مہتمم اکاؤنٹس', key: 'users' },
     { href: '/settings', label: 'ترتیبات', key: 'settings' },
   ],
   nazim: [
