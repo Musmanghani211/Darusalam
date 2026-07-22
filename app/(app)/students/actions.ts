@@ -31,7 +31,7 @@ export async function addStudent(formData: FormData) {
 
   const { error } = await supabase.from('students').insert({
     full_name, admission_no, class_id, teacher_id, guardian_name, phone, admission_date,
-    monthly_fee, fee_type,
+    monthly_fee, fee_type, fee_effective_from: admission_date,
   })
 
   if (error) {
@@ -57,9 +57,15 @@ export async function updateStudent(studentId: string, formData: FormData) {
   const monthly_fee = fee_type === 'Sabeel Lillah' ? 0 : Number(formData.get('monthly_fee') || 0)
   const admission_date = String(formData.get('admission_date') || '')
 
+  // If this student is being switched BACK from Sabeel Lillah to Regular,
+  // start their recurring fees from today — not from old "waived" months.
+  const { data: existing } = await supabase.from('students').select('fee_type').eq('id', studentId).single()
+  const reactivatingFees = existing?.fee_type === 'Sabeel Lillah' && fee_type === 'Regular'
+
   const { error } = await supabase.from('students').update({
     full_name, class_id, teacher_id, guardian_name, phone, cnic_or_bform, address, status,
     monthly_fee, fee_type, ...(admission_date ? { admission_date } : {}),
+    ...(reactivatingFees ? { fee_effective_from: todayPKT() } : {}),
   }).eq('id', studentId)
 
   revalidateAll()

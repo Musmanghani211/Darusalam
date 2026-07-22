@@ -20,7 +20,7 @@ export default async function FeesPage() {
 
   const { data: studentsRaw } = await supabase
     .from('students')
-    .select('id, full_name, phone, guardian_name, admission_date, monthly_fee, fee_type, classes(name)')
+    .select('id, full_name, phone, guardian_name, admission_date, fee_effective_from, monthly_fee, fee_type, classes(name)')
     .eq('status', 'Active')
 
   const normalizedStudents = (studentsRaw || []).map((s: any) => ({
