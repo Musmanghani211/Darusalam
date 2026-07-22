@@ -121,27 +121,56 @@ export async function deleteSalarySlip(slipId: string) {
 export async function addAdvance(teacherId: string, amount: number) {
   const supabase = await createClient()
   const profile = await getCurrentProfile()
+  const today = todayPKT()
 
   const { error } = await supabase.from('salary_advances').insert({
     teacher_id: teacherId,
     amount,
-    date: todayPKT(),
+    date: today,
     given_by: profile?.id,
+  })
+  if (error) return { error: error.message }
+
+  // The advance money actually leaves the madrasa's hand right now — record
+  // it as a real expense immediately, not only later when the salary slip
+  // (which just shows it as a deduction) is generated.
+  const { data: teacherRow } = await supabase.from('profiles').select('full_name').eq('id', teacherId).single()
+  await supabase.from('expenses').insert({
+    category: 'Salaries',
+    amount,
+    notes: `Advance — ${teacherRow?.full_name || 'Teacher'} — ${today}`,
+    paid_by: profile?.id,
+    date: today,
   })
 
   revalidateAll()
-  return { error: error?.message || null }
+  revalidatePath('/expenses')
+  return { error: null }
 }
 
 export async function deleteAdvance(advanceId: string) {
   const supabase = await createClient()
 
-  const { data: advance } = await supabase.from('salary_advances').select('settled').eq('id', advanceId).single()
+  const { data: advance } = await supabase.from('salary_advances').select('teacher_id, amount, date, settled').eq('id', advanceId).single()
   if (advance?.settled) {
     return { error: 'یہ ایڈوانس پہلے سے ایک تنخواہ سلپ میں کاٹا جا چکا ہے، اسے حذف نہیں کیا جا سکتا۔' }
   }
 
   const { error } = await supabase.from('salary_advances').delete().eq('id', advanceId)
+  if (error) return { error: error.message }
+
+  // Best-effort: remove the matching expense entry created when this advance was given
+  if (advance) {
+    const { data: teacherRow } = await supabase.from('profiles').select('full_name').eq('id', advance.teacher_id).single()
+    const expectedNotes = `Advance — ${teacherRow?.full_name || 'Teacher'} — ${advance.date}`
+    await supabase.from('expenses')
+      .delete()
+      .eq('category', 'Salaries')
+      .eq('amount', advance.amount)
+      .eq('notes', expectedNotes)
+  }
+
   revalidateAll()
-  return { error: error?.message || null }
+  revalidatePath('/expenses')
+  return { error: null }
 }
