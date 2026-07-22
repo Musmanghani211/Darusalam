@@ -1,7 +1,7 @@
 export const pageMeta: Record<string, { title: string; crumb: string }> = {
   '/dashboard': { title: 'ڈیش بورڈ', crumb: 'آج کا خلاصہ' },
   '/students': { title: 'طلبہ کا انتظام', crumb: 'داخلے، پروفائل اور پیش رفت' },
-  '/teachers': { title: 'اساتذہ کا انتظام', crumb: 'کلاسز، طلبہ اور حاضری' },
+  '/teachers': { title: 'عملہ کا انتظام', crumb: 'اساتذہ، ناظمین اور دیگر عملہ' },
   '/classes': { title: 'کلاسز', crumb: 'کلاسز اور اساتذہ کا تعین' },
   '/attendance': { title: 'حاضری', crumb: 'روزانہ طلبہ اور اساتذہ کی حاضری' },
   '/fees': { title: 'فیس', crumb: 'وصولی، تاریخ اور رسیدیں' },

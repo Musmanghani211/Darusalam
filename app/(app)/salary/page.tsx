@@ -7,7 +7,7 @@ export default async function SalaryPage() {
   const { data: staffRaw, error } = await supabase
     .from('profiles')
     .select('id, full_name, role, teacher_details(subject, monthly_salary)')
-    .in('role', ['teacher', 'nazim'])
+    .in('role', ['teacher', 'nazim', 'staff'])
     .eq('status', 'Active')
 
   const teachers = (staffRaw || []).map((t: any) => ({

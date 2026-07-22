@@ -30,7 +30,7 @@ export default function DashboardClient({
   const thisMonth = currentMonthLabel()
 
   const activeStudents = students.filter(s => s.status === 'Active')
-  const activeTeachers = teachers.filter(t => t.status === 'Active')
+  const activeStaff = teachers.filter(t => t.status === 'Active')
   const myStudents = students.filter(s => s.teacher_id === myId)
 
   const paidFeesThisMonth = fees.filter(f => f.status === 'Paid' && f.month === thisMonth)
@@ -102,7 +102,7 @@ export default function DashboardClient({
   }
 
   const titles: Record<string, string> = {
-    students: 'کل طلبہ', teachers: 'کل اساتذہ', monthlyIncome: `آمدنی — ${thisMonth}`,
+    students: 'کل طلبہ', teachers: 'کل عملہ', monthlyIncome: `آمدنی — ${thisMonth}`,
     monthlyExpense: `اخراجات — ${thisMonth}`, balance: 'موجودہ بیلنس', admissions: 'نئے داخلے',
     feesCollected: `وصول شدہ فیس — ${thisMonth}`, pendingFees: `زیر التوا فیس — ${thisMonth}`, attendance: 'آج کی حاضری',
     myStudents: 'میرے طلبہ', myAttendance: 'آج کی حاضری',
@@ -116,11 +116,13 @@ export default function DashboardClient({
           headers: ['نام', 'کلاس', 'حالت'],
           rows: activeStudents.map(s => ({ cells: [s.full_name, s.classes?.name || '-', 'فعال'], sortValue: s.full_name })),
         }
-      case 'teachers':
+      case 'teachers': {
+        const roleLabel = (r: string) => r === 'nazim' ? 'ناظم' : r === 'staff' ? 'عملہ' : 'استاذ'
         return {
-          headers: ['نام', 'حالت'],
-          rows: activeTeachers.map(t => ({ cells: [t.full_name, 'فعال'], sortValue: t.full_name })),
+          headers: ['نام', 'کردار', 'حالت'],
+          rows: activeStaff.map(t => ({ cells: [t.full_name, roleLabel(t.role), 'فعال'], sortValue: t.full_name })),
         }
+      }
       case 'monthlyIncome': {
         const rows: DetailRow[] = [
           ...monthIncome.map((r: any) => ({ cells: [r.date, r.source, r.category, `+${fmtMoney(r.amount)}`], sortValue: r.date, tone: 'positive' as const })),
@@ -182,7 +184,7 @@ export default function DashboardClient({
       default:
         return { headers: [], rows: [] }
     }
-  }, [open, activeStudents, activeTeachers, monthIncome, monthFunds, monthFees, monthExpenses, totalIncomeAllTime, totalExpenseAllTime, balance, newAdmissions, paidFeesThisMonth, pendingFeesThisMonth, presentStudents, absentStudents, myStudents, myPresent, myAbsent])
+  }, [open, activeStudents, activeStaff, monthIncome, monthFunds, monthFees, monthExpenses, totalIncomeAllTime, totalExpenseAllTime, balance, newAdmissions, paidFeesThisMonth, pendingFeesThisMonth, presentStudents, absentStudents, myStudents, myPresent, myAbsent])
 
   const sortedRows = useMemo(() => {
     const rows = [...detail.rows]
@@ -196,7 +198,7 @@ export default function DashboardClient({
       {role === 'mohtamim' && (
         <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4 gap-[14px]">
           <Card id="students" label="کل طلبہ" value={String(activeStudents.length)} />
-          <Card id="teachers" label="کل اساتذہ" value={String(activeTeachers.length)} />
+          <Card id="teachers" label="کل عملہ (اساتذہ، ناظم، دیگر)" value={String(activeStaff.length)} />
           <Card id="monthlyIncome" label={`آمدنی — ${thisMonth}`} value={fmtMoney(monthlyIncomeTotal)} />
           <Card id="monthlyExpense" label={`اخراجات — ${thisMonth}`} value={fmtMoney(monthlyExpenseTotal)} />
           <Card id="balance" label="موجودہ بیلنس" value={fmtMoney(balance)} />
@@ -210,7 +212,7 @@ export default function DashboardClient({
       {role === 'nazim' && (
         <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4 gap-[14px]">
           <Card id="students" label="کل طلبہ" value={String(activeStudents.length)} />
-          <Card id="teachers" label="کل اساتذہ" value={String(activeTeachers.length)} />
+          <Card id="teachers" label="کل عملہ (اساتذہ، ناظم، دیگر)" value={String(activeStaff.length)} />
           <Card id="feesCollected" label={`وصول شدہ فیس — ${thisMonth}`} value={fmtMoney(feesCollectedTotal)} />
           <Card id="pendingFees" label={`زیر التوا فیس — ${thisMonth}`} value={fmtMoney(pendingFeesTotal)} down />
           <Card id="admissions" label="نئے داخلے" value={String(newAdmissions.length)} />
@@ -222,6 +224,12 @@ export default function DashboardClient({
         <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-[14px]">
           <Card id="myStudents" label="میرے طلبہ" value={String(myStudents.length)} />
           <Card id="myAttendance" label="آج کی حاضری" value={`${myPresent.length} / ${myStudents.length}`} />
+        </div>
+      )}
+
+      {role === 'staff' && (
+        <div className="bg-surface border border-border rounded-card shadow-sm p-8 text-center text-muted">
+          خوش آمدید — اپنی تفصیلات اور تنخواہ کی سلپ دیکھنے کے لیے "میری پروفائل" کھولیں۔
         </div>
       )}
 

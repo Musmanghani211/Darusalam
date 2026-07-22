@@ -41,4 +41,5 @@ export const roleNameLabel: Record<string, string> = {
   mohtamim: 'مہتمم',
   nazim: 'ناظم',
   teacher: 'استاذ',
+  staff: 'عملہ',
 }

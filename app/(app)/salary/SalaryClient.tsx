@@ -83,7 +83,8 @@ export default function SalaryClient({ teachers, slips, advances, loadError }: {
 
   function printSlip(s: Slip) {
     const teacherName = historyFor?.full_name || teachers.find(t => t.id === s.teacher_id)?.full_name || '-'
-    const teacherRole = (historyFor?.role || teachers.find(t => t.id === s.teacher_id)?.role) === 'nazim' ? 'ناظم' : 'استاذ'
+    const roleVal = historyFor?.role || teachers.find(t => t.id === s.teacher_id)?.role
+    const teacherRole = roleVal === 'nazim' ? 'ناظم' : roleVal === 'staff' ? 'عملہ' : 'استاذ'
     const win = window.open('', '_blank', 'width=460,height=640')
     if (!win) return
     win.document.write(`
@@ -154,7 +155,7 @@ export default function SalaryClient({ teachers, slips, advances, loadError }: {
                 <tr key={t.id}>
                   <td className="px-4 py-[11px] border-b border-border">{t.full_name}</td>
                   <td className="px-4 py-[11px] border-b border-border">
-                    <span className="badge bg-[#FBF1DC] text-[#8A6A16]">{t.role === 'nazim' ? 'ناظم' : 'استاذ'}</span>
+                    <span className="badge bg-[#FBF1DC] text-[#8A6A16]">{t.role === 'nazim' ? 'ناظم' : t.role === 'staff' ? 'عملہ' : 'استاذ'}</span>
                   </td>
                   <td className="px-4 py-[11px] border-b border-border font-mono">{fmt(t.teacher_details?.monthly_salary || 0)}</td>
                   <td className="px-4 py-[11px] border-b border-border font-mono">

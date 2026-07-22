@@ -18,3 +18,24 @@ export async function saveSettings(formData: FormData) {
   revalidatePath('/settings')
   return { error: error?.message || null }
 }
+
+export async function exportFullBackup() {
+  const supabase = await createClient()
+
+  const tables = [
+    'profiles', 'teacher_details', 'classes', 'students',
+    'attendance', 'fees', 'income', 'expenses', 'other_funds',
+    'salary_slips', 'salary_advances', 'progress_entries', 'settings',
+  ]
+
+  const backup: Record<string, any> = {
+    generated_at: new Date().toISOString(),
+  }
+
+  for (const table of tables) {
+    const { data, error } = await supabase.from(table).select('*')
+    backup[table] = error ? { error: error.message } : data
+  }
+
+  return backup
+}

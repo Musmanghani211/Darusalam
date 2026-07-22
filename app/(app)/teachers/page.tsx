@@ -7,8 +7,8 @@ export default async function TeachersPage() {
 
   const { data: teachers, error } = await supabase
     .from('profiles')
-    .select('id, full_name, role, status, created_at, teacher_details(subject, monthly_salary)')
-    .in('role', ['teacher', 'nazim'])
+    .select('id, full_name, role, status, phone, created_at, teacher_details(subject, monthly_salary, joining_date)')
+    .in('role', ['teacher', 'nazim', 'staff'])
     .order('created_at', { ascending: false })
 
   const normalized = (teachers || []).map((t: any) => ({

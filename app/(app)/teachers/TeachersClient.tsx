@@ -4,15 +4,30 @@ import { useState, useMemo } from 'react'
 import { X, Trash2, Search, ArrowUpDown } from 'lucide-react'
 import { addTeacher, toggleTeacherStatus, updateTeacher, deleteTeacher } from './actions'
 import { statusLabel } from '@/lib/labels'
+import { todayPKT } from '@/lib/date'
 
 type Teacher = {
   id: string
   full_name: string
   role: string
   status: string
+  phone: string | null
   created_at: string
-  teacher_details: { subject: string; monthly_salary: number } | null
+  teacher_details: { subject: string; monthly_salary: number; joining_date: string | null } | null
 }
+
+const SUBJECT_OPTIONS = [
+  { value: 'Hifz', label: 'حفظ' },
+  { value: 'Nazira', label: 'ناظرہ' },
+  { value: 'Tajweed', label: 'تجوید' },
+  { value: 'Qaida', label: 'قاعدہ' },
+  { value: 'Administration', label: 'انتظامی امور' },
+  { value: 'Khadim', label: 'خادم' },
+  { value: 'Safai Wala', label: 'صفائی والا' },
+  { value: 'Pawarchi', label: 'باورچی' },
+  { value: 'Chowkidar', label: 'چوکیدار' },
+  { value: 'Other', label: 'دیگر' },
+]
 
 export default function TeachersClient({
   role, teachers, studentCounts, loadError,
@@ -132,11 +147,11 @@ export default function TeachersClient({
               <tr key={t.id}>
                 <td className="px-4 py-[11px] border-b border-border">{t.full_name}</td>
                 <td className="px-4 py-[11px] border-b border-border">
-                  <span className="badge bg-[#FBF1DC] text-[#8A6A16]">{t.role === 'nazim' ? 'ناظم' : 'استاذ'}</span>
+                  <span className="badge bg-[#FBF1DC] text-[#8A6A16]">{t.role === 'nazim' ? 'ناظم' : t.role === 'staff' ? 'عملہ' : 'استاذ'}</span>
                 </td>
-                <td className="px-4 py-[11px] border-b border-border">{t.teacher_details?.subject || (t.role === 'nazim' ? 'انتظامی امور' : '-')}</td>
+                <td className="px-4 py-[11px] border-b border-border">{SUBJECT_OPTIONS.find(o => o.value === t.teacher_details?.subject)?.label || t.teacher_details?.subject || (t.role === 'nazim' ? 'انتظامی امور' : '-')}</td>
                 <td className="px-4 py-[11px] border-b border-border">{studentCounts[t.id] || 0}</td>
-                <td className="px-4 py-[11px] border-b border-border">{new Date(t.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                <td className="px-4 py-[11px] border-b border-border">{new Date(t.teacher_details?.joining_date || t.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                 {canManage && <td className="px-4 py-[11px] border-b border-border font-mono">Rs {Number(t.teacher_details?.monthly_salary || 0).toLocaleString('en-PK')}</td>}
                 <td className="px-4 py-[11px] border-b border-border">
                   <span className={`badge ${t.status === 'Active' ? 'bg-income-bg text-income' : 'bg-danger-bg text-danger'}`}>{statusLabel[t.status] || t.status}</span>
@@ -189,10 +204,22 @@ export default function TeachersClient({
                 <select name="role" defaultValue="teacher" className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
                   <option value="teacher">استاذ</option>
                   <option value="nazim">ناظم</option>
+                  <option value="staff">دیگر عملہ (خادم/صفائی/باورچی وغیرہ)</option>
                 </select>
               </div>
-              <F label="مضمون (اگر استاذ ہیں)" name="subject" placeholder="حفظ / ناظرہ / تجوید" />
+              <F label="رابطہ نمبر" name="phone" placeholder="03XX-XXXXXXX" />
+              <div>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">مضمون / عہدہ</label>
+                <select name="subject" className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+                  <option value="">منتخب کریں</option>
+                  {SUBJECT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
               <F label="ماہانہ تنخواہ" name="monthly_salary" type="number" />
+              <div>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">شمولیت کی تاریخ</label>
+                <input name="joining_date" type="date" max={todayPKT()} defaultValue={todayPKT()} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+              </div>
               <button type="submit" disabled={saving} className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors mt-1 disabled:opacity-60">
                 {saving ? 'محفوظ ہو رہا ہے...' : 'اکاؤنٹ بنائیں'}
               </button>
@@ -215,8 +242,23 @@ export default function TeachersClient({
                 <input name="full_name" defaultValue={editTarget.full_name} required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
               </div>
               <div>
-                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">مضمون</label>
-                <input name="subject" defaultValue={editTarget.teacher_details?.subject || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">رابطہ نمبر</label>
+                <input name="phone" defaultValue={editTarget.phone || ''} placeholder="03XX-XXXXXXX" className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+              </div>
+              <div>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">کردار</label>
+                <select name="role" defaultValue={editTarget.role} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+                  <option value="teacher">استاذ</option>
+                  <option value="nazim">ناظم</option>
+                  <option value="staff">دیگر عملہ (خادم/صفائی/باورچی وغیرہ)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">مضمون / عہدہ</label>
+                <select name="subject" defaultValue={editTarget.teacher_details?.subject || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
+                  <option value="">منتخب کریں</option>
+                  {SUBJECT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
               </div>
               <div>
                 <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">ماہانہ تنخواہ</label>

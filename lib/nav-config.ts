@@ -4,7 +4,7 @@ export const navConfig: Record<string, NavItem[]> = {
   mohtamim: [
     { href: '/dashboard', label: 'ڈیش بورڈ', key: 'dashboard' },
     { href: '/students', label: 'طلبہ', key: 'students' },
-    { href: '/teachers', label: 'اساتذہ', key: 'teachers' },
+    { href: '/teachers', label: 'عملہ', key: 'teachers' },
     { href: '/classes', label: 'کلاسز', key: 'classes' },
     { href: '/attendance', label: 'حاضری', key: 'attendance' },
     { href: '/fees', label: 'فیس', key: 'fees' },
@@ -19,7 +19,7 @@ export const navConfig: Record<string, NavItem[]> = {
   nazim: [
     { href: '/dashboard', label: 'ڈیش بورڈ', key: 'dashboard' },
     { href: '/students', label: 'طلبہ', key: 'students' },
-    { href: '/teachers', label: 'اساتذہ', key: 'teachers' },
+    { href: '/teachers', label: 'عملہ', key: 'teachers' },
     { href: '/classes', label: 'کلاسز', key: 'classes' },
     { href: '/attendance', label: 'حاضری', key: 'attendance' },
     { href: '/fees', label: 'فیس', key: 'fees' },
@@ -34,10 +34,15 @@ export const navConfig: Record<string, NavItem[]> = {
     { href: '/progress', label: 'طلبہ کی پیش رفت', key: 'progress' },
     { href: '/profile', label: 'میری پروفائل', key: 'profile' },
   ],
+  staff: [
+    { href: '/dashboard', label: 'ڈیش بورڈ', key: 'dashboard' },
+    { href: '/profile', label: 'میری پروفائل', key: 'profile' },
+  ],
 }
 
 export const roleLabel: Record<string, string> = {
   mohtamim: 'مہتمم',
   nazim: 'ناظم',
   teacher: 'استاذ',
+  staff: 'عملہ',
 }
