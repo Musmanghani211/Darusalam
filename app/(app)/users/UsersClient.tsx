@@ -5,7 +5,7 @@ import { X, Trash2 } from 'lucide-react'
 import { createUser, toggleUserStatus, resetPassword, deleteUser } from './actions'
 import { statusLabel, roleNameLabel } from '@/lib/labels'
 
-type User = { id: string; full_name: string; role: string; status: string }
+type User = { id: string; full_name: string; role: string; status: string; email?: string | null }
 
 export default function UsersClient({ users, currentUserId, loadError }: { users: User[]; currentUserId: string; loadError?: string }) {
   const [showAdd, setShowAdd] = useState(false)
@@ -63,7 +63,7 @@ export default function UsersClient({ users, currentUserId, loadError }: { users
         <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
-              {['نام', 'کردار', 'حالت', ''].map(h => (
+              {['نام', 'ای میل', 'کردار', 'حالت', ''].map(h => (
                 <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
               ))}
             </tr>
@@ -72,6 +72,7 @@ export default function UsersClient({ users, currentUserId, loadError }: { users
             {users.map(u => (
               <tr key={u.id}>
                 <td className="px-4 py-[11px] border-b border-border">{u.full_name}</td>
+                <td className="px-4 py-[11px] border-b border-border font-mono text-[12px]">{u.email || '-'}</td>
                 <td className="px-4 py-[11px] border-b border-border"><span className="badge bg-[#FBF1DC] text-[#8A6A16]">{roleNameLabel[u.role] || u.role}</span></td>
                 <td className="px-4 py-[11px] border-b border-border"><span className={`badge ${u.status === 'Active' ? 'bg-income-bg text-income' : 'bg-danger-bg text-danger'}`}>{statusLabel[u.status] || u.status}</span></td>
                 <td className="px-4 py-[11px] border-b border-border">

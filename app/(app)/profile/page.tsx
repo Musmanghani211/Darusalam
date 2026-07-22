@@ -7,6 +7,7 @@ export default async function ProfilePage() {
   const { data: details } = await supabase.from('teacher_details').select('subject, monthly_salary').eq('teacher_id', profile?.id).single()
   const { count: myStudents } = await supabase.from('students').select('*', { count: 'exact', head: true }).eq('teacher_id', profile?.id)
   const { data: classes } = await supabase.from('classes').select('name').eq('teacher_id', profile?.id)
+  const { data: { user: authUser } } = await supabase.auth.getUser()
   const { data: latestSlip } = await supabase
     .from('salary_slips').select('month, basic_salary, bonus, deductions, advance_deducted, net_paid')
     .eq('teacher_id', profile?.id).order('created_at', { ascending: false }).limit(1).single()
@@ -20,6 +21,7 @@ export default async function ProfilePage() {
         <p className="text-[14px]">{classNames}</p>
         <p className="text-[12.5px] text-muted mt-[6px]">{myStudents ?? 0} طلبہ تفویض</p>
         {details?.subject && <p className="text-[12.5px] text-muted mt-[2px]">مضمون: {details.subject}</p>}
+        {authUser?.email && <p className="text-[12.5px] text-muted mt-[2px] font-mono">ای میل: {authUser.email}</p>}
       </div>
       <div className="bg-surface border border-border rounded-card shadow-sm p-[16px_18px]">
         <h4 className="text-[11.5px] uppercase tracking-wide text-muted font-semibold mb-[10px]">

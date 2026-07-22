@@ -12,6 +12,7 @@ type Teacher = {
   role: string
   status: string
   phone: string | null
+  email?: string | null
   created_at: string
   teacher_details: { subject: string; monthly_salary: number; joining_date: string | null } | null
 }
@@ -107,7 +108,7 @@ export default function TeachersClient({
     return rows
   }, [teachers, search, sortOrder])
 
-  const colCount = canManage ? 7 : 5
+  const colCount = canManage ? 8 : 6
 
   return (
     <>
@@ -150,7 +151,7 @@ export default function TeachersClient({
         <table className="w-full min-w-[720px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
-              {['نام', 'کردار', 'مضمون', 'طلبہ', 'شمولیت', ...(canManage ? ['تنخواہ'] : []), 'حالت', ...(canManage ? [''] : [])].map(h => (
+              {['نام', 'ای میل', 'کردار', 'مضمون', 'طلبہ', 'شمولیت', ...(canManage ? ['تنخواہ'] : []), 'حالت', ...(canManage ? [''] : [])].map(h => (
                 <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
               ))}
             </tr>
@@ -162,6 +163,7 @@ export default function TeachersClient({
             {visible.map(t => (
               <tr key={t.id}>
                 <td className="px-4 py-[11px] border-b border-border">{t.full_name}</td>
+                <td className="px-4 py-[11px] border-b border-border font-mono text-[12px]">{t.email || '-'}</td>
                 <td className="px-4 py-[11px] border-b border-border">
                   <span className="badge bg-[#FBF1DC] text-[#8A6A16]">{t.role === 'nazim' ? 'ناظم' : t.role === 'staff' ? 'عملہ' : 'استاذ'}</span>
                 </td>

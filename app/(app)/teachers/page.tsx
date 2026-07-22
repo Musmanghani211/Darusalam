@@ -1,4 +1,5 @@
 import { createClient, getCurrentProfile } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import TeachersClient from './TeachersClient'
 
 export default async function TeachersPage() {
@@ -16,6 +17,17 @@ export default async function TeachersPage() {
     teacher_details: Array.isArray(t.teacher_details) ? (t.teacher_details[0] ?? null) : t.teacher_details,
   }))
 
+  // Emails live in Supabase Auth, not in profiles — fetch them via the admin API
+  const admin = createAdminClient()
+  const emailMap: Record<string, string> = {}
+  try {
+    const { data: authUsers } = await admin.auth.admin.listUsers({ perPage: 1000 })
+    ;(authUsers?.users || []).forEach(u => { emailMap[u.id] = u.email || '' })
+  } catch {
+    // if this fails for any reason, just show no email rather than breaking the page
+  }
+  const withEmails = normalized.map((t: any) => ({ ...t, email: emailMap[t.id] || null }))
+
   // student counts per teacher
   const { data: classCounts } = await supabase.from('students').select('teacher_id')
   const countMap: Record<string, number> = {}
@@ -26,7 +38,7 @@ export default async function TeachersPage() {
   return (
     <TeachersClient
       role={profile?.role || 'teacher'}
-      teachers={normalized}
+      teachers={withEmails}
       studentCounts={countMap}
       loadError={error?.message}
     />
