@@ -2,6 +2,10 @@ import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import { todayPKT } from '@/lib/date'
 import ProgressClient from './ProgressClient'
 
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function ProgressPage({
   searchParams,
 }: { searchParams: Promise<{ date?: string }> }) {

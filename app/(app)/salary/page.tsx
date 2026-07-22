@@ -1,6 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import SalaryClient from './SalaryClient'
 
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function SalaryPage() {
   const supabase = await createClient()
 

@@ -2,6 +2,10 @@ import { createClient } from '@/lib/supabase/server'
 import { todayPKT } from '@/lib/date'
 import ReportsClient from './ReportsClient'
 
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function ReportsPage() {
   const supabase = await createClient()
   const today = todayPKT()

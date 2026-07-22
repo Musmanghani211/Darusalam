@@ -2,6 +2,10 @@ import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import { todayPKT } from '@/lib/date'
 import AttendanceClient from './AttendanceClient'
 
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function AttendancePage({
   searchParams,
 }: { searchParams: Promise<{ date?: string }> }) {

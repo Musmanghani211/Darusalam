@@ -1,6 +1,10 @@
 import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import ExpensesClient from './ExpensesClient'
 
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const CATEGORIES = ['Salaries','Electricity','Gas','Water','Food','Maintenance','Stationery','Other']
 
 export default async function ExpensesPage() {

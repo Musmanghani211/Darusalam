@@ -1,6 +1,9 @@
 import { createClient, getCurrentProfile } from '@/lib/supabase/server'
 import StudentsClient from './StudentsClient'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function StudentsPage() {
   const profile = await getCurrentProfile()
   const supabase = await createClient()

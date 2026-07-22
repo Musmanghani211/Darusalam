@@ -1,6 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import IncomeClient from './IncomeClient'
 
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const CATEGORIES = ['Zakat','Fitrana','Sadaqah','Lillah','Donations','Other Income']
 
 export default async function IncomePage() {

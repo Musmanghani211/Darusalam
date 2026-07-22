@@ -3,6 +3,10 @@ import { todayPKT, monthStartPKT } from '@/lib/date'
 import { generateVirtualFees } from '@/lib/virtual-fees'
 import DashboardClient from './DashboardClient'
 
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function DashboardPage() {
   const profile = await getCurrentProfile()
   const supabase = await createClient()
