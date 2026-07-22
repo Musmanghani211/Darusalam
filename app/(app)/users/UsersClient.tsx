@@ -118,6 +118,7 @@ export default function UsersClient({ users, currentUserId, loadError }: { users
                 <select name="role" className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
                   <option value="nazim">ناظم</option>
                   <option value="teacher">استاذ</option>
+                  <option value="staff">دیگر عملہ</option>
                   <option value="mohtamim">مہتمم</option>
                 </select>
               </div>

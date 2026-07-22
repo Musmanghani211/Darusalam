@@ -23,13 +23,14 @@ export async function addStudent(formData: FormData) {
   const phone = String(formData.get('phone') || '')
   const fee_type = String(formData.get('fee_type') || 'Regular')
   const monthly_fee = fee_type === 'Sabeel Lillah' ? 0 : Number(formData.get('monthly_fee') || 0)
+  const admission_date = String(formData.get('admission_date') || '') || todayPKT()
 
   // Auto-generate admission number: STD-101, STD-102, ...
   const { count } = await supabase.from('students').select('*', { count: 'exact', head: true })
   const admission_no = `STD-${101 + (count || 0)}`
 
   const { error } = await supabase.from('students').insert({
-    full_name, admission_no, class_id, teacher_id, guardian_name, phone, admission_date: todayPKT(),
+    full_name, admission_no, class_id, teacher_id, guardian_name, phone, admission_date,
     monthly_fee, fee_type,
   })
 
@@ -54,10 +55,11 @@ export async function updateStudent(studentId: string, formData: FormData) {
   const status = String(formData.get('status') || 'Active')
   const fee_type = String(formData.get('fee_type') || 'Regular')
   const monthly_fee = fee_type === 'Sabeel Lillah' ? 0 : Number(formData.get('monthly_fee') || 0)
+  const admission_date = String(formData.get('admission_date') || '')
 
   const { error } = await supabase.from('students').update({
     full_name, class_id, teacher_id, guardian_name, phone, cnic_or_bform, address, status,
-    monthly_fee, fee_type,
+    monthly_fee, fee_type, ...(admission_date ? { admission_date } : {}),
   }).eq('id', studentId)
 
   revalidateAll()

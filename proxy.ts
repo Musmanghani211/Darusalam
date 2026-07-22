@@ -6,6 +6,7 @@ const roleAccess: Record<string, string[]> = {
   mohtamim: ['/dashboard', '/students', '/teachers', '/classes', '/attendance', '/fees', '/salary', '/income', '/expenses', '/reports', '/progress', '/users', '/settings'],
   nazim: ['/dashboard', '/students', '/teachers', '/classes', '/attendance', '/fees', '/salary', '/progress', '/funds', '/settings'],
   teacher: ['/dashboard', '/attendance', '/progress', '/profile'],
+  staff: ['/dashboard', '/profile'],
 }
 
 export async function proxy(request: NextRequest) {

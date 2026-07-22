@@ -280,6 +280,10 @@ export default function StudentsClient({
                   <input name="full_name" defaultValue={selected.full_name} required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
                 </div>
                 <div>
+                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">داخلہ کی تاریخ</label>
+                  <input name="admission_date" type="date" max={todayPKT()} defaultValue={selected.admission_date} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+                </div>
+                <div>
                   <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">سرپرست کا نام</label>
                   <input name="guardian_name" defaultValue={selected.guardian_name || ''} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
                 </div>
@@ -384,6 +388,10 @@ export default function StudentsClient({
               {formError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{formError}</div>}
 
               <p className="text-[11.5px] text-muted -mt-1">داخلہ نمبر خود بخود بن جائے گا (مثلاً STD-106)۔</p>
+              <div>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">داخلہ کی تاریخ</label>
+                <input name="admission_date" type="date" max={todayPKT()} defaultValue={todayPKT()} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+              </div>
               <Field label="پورا نام" name="full_name" placeholder="طالب علم کا پورا نام" required />
               <Field label="سرپرست کا نام" name="guardian_name" placeholder="سرپرست کا نام" />
               <Field label="رابطہ نمبر" name="phone" placeholder="03XX-XXXXXXX" />

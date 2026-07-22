@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     { data: fees }, { data: funds }, { data: attendanceToday },
   ] = await Promise.all([
     supabase.from('students').select('id, full_name, status, admission_date, teacher_id, classes(name)'),
-    supabase.from('profiles').select('id, full_name, status').eq('role', 'teacher'),
+    supabase.from('profiles').select('id, full_name, status, role').in('role', ['teacher', 'nazim', 'staff']),
     supabase.from('income').select('*'),
     supabase.from('expenses').select('*, profiles(full_name)'),
     supabase.from('fees').select('*, students(full_name)'),

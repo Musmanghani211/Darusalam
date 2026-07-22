@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { todayPKT } from '@/lib/date'
 
 function revalidateAll() {
   revalidatePath('/teachers')
@@ -18,8 +19,10 @@ export async function addTeacher(formData: FormData) {
   const email = String(formData.get('email') || '')
   const password = String(formData.get('password') || '')
   const role = String(formData.get('role') || 'teacher')
+  const phone = String(formData.get('phone') || '')
   const subject = String(formData.get('subject') || '')
   const monthly_salary = Number(formData.get('monthly_salary') || 0)
+  const joining_date = String(formData.get('joining_date') || '') || todayPKT()
 
   const admin = createAdminClient()
 
@@ -37,12 +40,13 @@ export async function addTeacher(formData: FormData) {
 
   // the trigger auto-creates a profiles row with role 'teacher' by default,
   // we then set the actual full_name/role explicitly
-  await supabase.from('profiles').update({ full_name, role }).eq('id', created.user.id)
+  await supabase.from('profiles').update({ full_name, role, phone }).eq('id', created.user.id)
 
   const { error: detailsErr } = await supabase.from('teacher_details').insert({
     teacher_id: created.user.id,
     subject,
     monthly_salary,
+    joining_date,
   })
   if (detailsErr) return { error: detailsErr.message }
 
@@ -62,14 +66,17 @@ export async function updateTeacher(teacherId: string, formData: FormData) {
   const supabase = await createClient()
 
   const full_name = String(formData.get('full_name') || '')
+  const phone = String(formData.get('phone') || '')
+  const role = String(formData.get('role') || 'teacher')
   const subject = String(formData.get('subject') || '')
   const monthly_salary = Number(formData.get('monthly_salary') || 0)
+  const joining_date = String(formData.get('joining_date') || '')
 
-  const { error: profErr } = await supabase.from('profiles').update({ full_name }).eq('id', teacherId)
+  const { error: profErr } = await supabase.from('profiles').update({ full_name, phone, role }).eq('id', teacherId)
   if (profErr) return { error: profErr.message }
 
   const { error: detErr } = await supabase.from('teacher_details').upsert({
-    teacher_id: teacherId, subject, monthly_salary,
+    teacher_id: teacherId, subject, monthly_salary, ...(joining_date ? { joining_date } : {}),
   })
 
   revalidateAll()
