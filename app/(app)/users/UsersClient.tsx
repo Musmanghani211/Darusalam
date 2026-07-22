@@ -55,8 +55,9 @@ export default function UsersClient({ users, currentUserId, loadError }: { users
       {deleteError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">{deleteError}</div>}
 
       <div className="flex justify-end mb-4">
-        <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ صارف بنائیں</button>
+        <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ نیا مہتمم اکاؤنٹ بنائیں</button>
       </div>
+      <p className="text-[12px] text-muted -mt-3 mb-4">نوٹ: استاذ، ناظم اور دیگر عملہ بنانے کے لیے "عملہ" والا صفحہ استعمال کریں — یہاں سے صرف نیا مہتمم اکاؤنٹ بنایا جا سکتا ہے۔</p>
 
       <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
         <table className="w-full min-w-[640px] text-[13px] border-collapse">
@@ -96,11 +97,12 @@ export default function UsersClient({ users, currentUserId, loadError }: { users
         <div className="fixed inset-0 bg-primary-dark/35 z-50 flex justify-end" onClick={() => setShowAdd(false)}>
           <div className="w-[440px] max-w-[92vw] bg-surface h-full overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-5 border-b border-border flex justify-between items-start sticky top-0 bg-surface">
-              <h3 className="font-display text-[17px] font-semibold">صارف بنائیں</h3>
+              <h3 className="font-display text-[17px] font-semibold">نیا مہتمم اکاؤنٹ بنائیں</h3>
               <button onClick={() => setShowAdd(false)} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
             </div>
             <form action={handleAdd} className="px-6 py-[22px] flex flex-col gap-4">
               {formError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{formError}</div>}
+              <input type="hidden" name="role" value="mohtamim" />
               <div>
                 <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">پورا نام</label>
                 <input name="full_name" required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
@@ -113,17 +115,8 @@ export default function UsersClient({ users, currentUserId, loadError }: { users
                 <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">عارضی پاس ورڈ</label>
                 <input name="password" required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
               </div>
-              <div>
-                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">کردار</label>
-                <select name="role" className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
-                  <option value="nazim">ناظم</option>
-                  <option value="teacher">استاذ</option>
-                  <option value="staff">دیگر عملہ</option>
-                  <option value="mohtamim">مہتمم</option>
-                </select>
-              </div>
               <button type="submit" disabled={saving} className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors mt-1 disabled:opacity-60">
-                {saving ? 'محفوظ ہو رہا ہے...' : 'صارف بنائیں'}
+                {saving ? 'محفوظ ہو رہا ہے...' : 'مہتمم اکاؤنٹ بنائیں'}
               </button>
             </form>
           </div>
