@@ -103,3 +103,10 @@ export async function deleteTeacher(teacherId: string) {
   revalidateAll()
   return { error: null }
 }
+
+export async function resetTeacherPassword(teacherId: string, newPassword: string) {
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.updateUserById(teacherId, { password: newPassword })
+  revalidateAll()
+  return { error: error?.message || null }
+}

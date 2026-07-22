@@ -9,7 +9,7 @@ export const pageMeta: Record<string, { title: string; crumb: string }> = {
   '/income': { title: 'آمدنی', crumb: 'تمام مدات کے مطابق آمدنی' },
   '/expenses': { title: 'اخراجات', crumb: 'تمام مدات کے مطابق اخراجات' },
   '/reports': { title: 'رپورٹس', crumb: 'مکمل خلاصہ جات' },
-  '/users': { title: 'صارف کا انتظام', crumb: 'صارفین بنائیں اور ان کا انتظام کریں' },
+  '/users': { title: 'مہتمم اکاؤنٹس', crumb: 'اضافی مہتمم اکاؤنٹس بنائیں اور ان کا انتظام کریں' },
   '/settings': { title: 'ترتیبات', crumb: 'سسٹم کی ترجیحات' },
   '/funds': { title: 'دیگر فنڈز', crumb: 'دستی طور پر شامل کردہ رقوم' },
   '/progress': { title: 'طلبہ کی پیش رفت', crumb: 'سبق، سبقی اور منزل' },
