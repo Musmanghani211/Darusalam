@@ -163,7 +163,7 @@ export default function StudentsClient({
         </div>
         {canManage && (
           <button
-            onClick={() => { setShowAddForm(true); setAddClassId(''); setAddFeeType('Regular') }}
+            onClick={() => { setShowAddForm(true); setAddClassId(selectedClassId || ''); setAddFeeType('Regular') }}
             className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors"
           >
             + نیا داخلہ
