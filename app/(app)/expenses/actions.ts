@@ -13,11 +13,12 @@ export async function addExpense(formData: FormData) {
   const category = String(formData.get('category') || '')
   const amount = Number(formData.get('amount') || 0)
   const notes = String(formData.get('notes') || '')
+  const date = String(formData.get('date') || '') || todayPKT()
 
   if (!CATEGORIES.includes(category)) return { error: 'Invalid category' }
 
   const { error } = await supabase.from('expenses').insert({
-    category, amount, notes, paid_by: profile?.id, date: todayPKT(),
+    category, amount, notes, paid_by: profile?.id, date,
   })
 
   revalidatePath('/expenses')

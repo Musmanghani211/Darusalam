@@ -6,6 +6,7 @@ type StudentForFees = {
   full_name: string
   phone?: string | null
   guardian_name?: string | null
+  class_id?: string | null
   admission_date: string
   fee_effective_from?: string | null
   monthly_fee: number
@@ -37,7 +38,7 @@ export function generateVirtualFees(students: StudentForFees[], realFees: RealFe
           amount: s.monthly_fee,
           status: 'Pending',
           paid_on: null,
-          students: { full_name: s.full_name, phone: s.phone, guardian_name: s.guardian_name, classes: s.classes },
+          students: { full_name: s.full_name, phone: s.phone, guardian_name: s.guardian_name, class_id: s.class_id, classes: s.classes },
           isVirtual: true,
         })
       }

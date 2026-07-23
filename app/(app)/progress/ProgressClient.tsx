@@ -7,7 +7,8 @@ import { addProgressEntry, updateProgressEntry, deleteProgressEntry } from './ac
 import { SURAHS, surahsForPara, ayatRangeForParaSurah, surahName } from '@/lib/quran-data'
 import { todayPKT } from '@/lib/date'
 
-type Student = { id: string; full_name: string; classes: { name: string } | null; profiles?: { full_name: string } | null }
+type Student = { id: string; full_name: string; class_id: string | null; classes: { name: string } | null; profiles?: { full_name: string } | null }
+type ClassRow = { id: string; name: string }
 type AttRow = { student_id: string; status: string }
 type Entry = {
   id: string; student_id: string; entry_type: string
@@ -25,10 +26,11 @@ function refText(para: number, surah: number, ayat: number) {
 }
 
 export default function ProgressClient({
-  role, students, dayAttendance, entries, selectedDate, showTeacherColumn, loadError,
+  role, students, classes, dayAttendance, entries, selectedDate, showTeacherColumn, loadError,
 }: {
   role: string
   students: Student[]
+  classes: ClassRow[]
   dayAttendance: AttRow[]
   entries: Entry[]
   selectedDate: string
@@ -39,6 +41,8 @@ export default function ProgressClient({
   const [addFor, setAddFor] = useState<{ student: Student; type: string; existing: Entry | null } | null>(null)
   const [viewFor, setViewFor] = useState<Student | null>(null)
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null)
+  const [search, setSearch] = useState('')
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null)
 
   const today = todayPKT()
   const isToday = selectedDate === today
@@ -49,6 +53,26 @@ export default function ProgressClient({
   const totalAbsent = absentIds.size
 
   const entryFor = (studentId: string, type: string) => entries.find(e => e.student_id === studentId && e.entry_type === type && e.entry_date === selectedDate)
+
+  // Class-wise view (only meaningful for Mohtamim/Nazim who see every class;
+  // a teacher only ever sees their own students, so it goes straight to the table).
+  const classSummaries = useMemo(() => {
+    return classes.map(c => ({ ...c, studentCount: students.filter(s => s.class_id === c.id).length }))
+  }, [classes, students])
+
+  const showingTable = !showTeacherColumn || search.trim() !== '' || selectedClassId !== null
+
+  const visibleStudents = useMemo(() => {
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      return students.filter(s => s.full_name.toLowerCase().includes(q) || (s.classes?.name || '').toLowerCase().includes(q))
+    }
+    if (showTeacherColumn && selectedClassId) {
+      return students.filter(s => s.class_id === selectedClassId)
+    }
+    if (showTeacherColumn) return []
+    return students
+  }, [students, search, selectedClassId, showTeacherColumn])
 
   return (
     <>
@@ -90,7 +114,41 @@ export default function ProgressClient({
         </div>
       </div>
 
-      <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+        <h3 className="text-[15.5px] font-semibold">{showTeacherColumn ? 'کلاس منتخب کریں' : 'طلبہ'}</h3>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="نام یا کلاس تلاش کریں..."
+          className="px-3 py-[8px] border border-border rounded-[9px] text-[12.5px] w-[220px] bg-surface"
+        />
+      </div>
+
+      {showTeacherColumn && !showingTable && (
+        <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-[14px] mb-6">
+          {classSummaries.length === 0 && (
+            <div className="col-span-full text-center text-muted py-10 bg-surface border border-border rounded-card">ابھی کوئی کلاس نہیں۔</div>
+          )}
+          {classSummaries.map(c => (
+            <div
+              key={c.id}
+              onClick={() => setSelectedClassId(c.id)}
+              className="bg-surface border border-border rounded-card p-[16px_18px] shadow-sm cursor-pointer hover:border-gold transition-colors"
+            >
+              <div className="text-[15px] font-semibold mb-1">{c.name}</div>
+              <div className="font-display font-mono text-[20px] font-semibold mt-2">{c.studentCount}</div>
+              <div className="text-[11.5px] text-muted">طلبہ</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showingTable && (
+        <>
+          {showTeacherColumn && selectedClassId && !search.trim() && (
+            <button onClick={() => setSelectedClassId(null)} className="text-[12.5px] text-primary underline mb-3">← تمام کلاسز پر واپس جائیں</button>
+          )}
+          <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
         <table className="w-full min-w-[760px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
@@ -100,8 +158,8 @@ export default function ProgressClient({
             </tr>
           </thead>
           <tbody>
-            {students.length === 0 && <tr><td colSpan={showTeacherColumn ? 8 : 7} className="text-center text-muted py-10">ابھی کوئی طالب علم نہیں۔</td></tr>}
-            {students.map(s => {
+            {visibleStudents.length === 0 && <tr><td colSpan={showTeacherColumn ? 8 : 7} className="text-center text-muted py-10">کوئی نتیجہ نہیں ملا۔</td></tr>}
+            {visibleStudents.map(s => {
               const isAbsent = absentIds.has(s.id)
               return (
                 <tr key={s.id}>
@@ -147,7 +205,9 @@ export default function ProgressClient({
             })}
           </tbody>
         </table>
-      </div>
+          </div>
+        </>
+      )}
 
       {addFor && (
         <EntryModal

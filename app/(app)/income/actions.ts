@@ -15,11 +15,12 @@ export async function addIncome(formData: FormData) {
   const amount = Number(formData.get('amount') || 0)
   const purpose = String(formData.get('purpose') || '')
   const notes = String(formData.get('notes') || '')
+  const date = String(formData.get('date') || '') || todayPKT()
 
   if (!CATEGORIES.includes(category)) return { error: 'Invalid category' }
 
   const { error } = await supabase.from('income').insert({
-    category, source, amount, purpose, notes, added_by: profile?.id, date: todayPKT(),
+    category, source, amount, purpose, notes, added_by: profile?.id, date,
   })
 
   revalidatePath('/income')

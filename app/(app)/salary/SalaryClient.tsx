@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Trash2, Pencil, Printer } from 'lucide-react'
+import { X, Trash2, Pencil, Printer, ArrowUpDown } from 'lucide-react'
 import { generateSalary, deleteSalarySlip, addAdvance, updateSalarySlip, deleteAdvance } from './actions'
 import { monthOptions, currentMonthLabel } from '@/lib/months'
 
@@ -20,6 +20,15 @@ function fmt(n: number) {
   return 'Rs ' + Number(n || 0).toLocaleString('en-PK')
 }
 
+const MONTH_ORDER: Record<string, string> = {
+  Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06',
+  Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12',
+}
+function monthSortKey(label: string) {
+  const [mon, year] = label.split(' ')
+  return `${year}-${MONTH_ORDER[mon] || '00'}`
+}
+
 export default function SalaryClient({ teachers, slips, advances, loadError }: { teachers: Teacher[]; slips: Slip[]; advances: Advance[]; loadError?: string }) {
   const [genFor, setGenFor] = useState<Teacher | null>(null)
   const [historyFor, setHistoryFor] = useState<Teacher | null>(null)
@@ -29,6 +38,8 @@ export default function SalaryClient({ teachers, slips, advances, loadError }: {
   const [formError, setFormError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [historySearch, setHistorySearch] = useState('')
+  const [historyYearFilter, setHistoryYearFilter] = useState('all')
+  const [historySortDir, setHistorySortDir] = useState<'desc' | 'asc'>('desc')
 
   const thisMonth = currentMonthLabel()
 
@@ -131,7 +142,14 @@ export default function SalaryClient({ teachers, slips, advances, loadError }: {
   const historyAdvances = historyFor
     ? advances.filter(a => a.teacher_id === historyFor.id && (!historySearch.trim() || a.date.includes(historySearch)))
     : []
-  const filteredHistory = historySlips.filter(s => !historySearch.trim() || s.month.toLowerCase().includes(historySearch.toLowerCase()))
+  const historyYears = Array.from(new Set(historySlips.map(s => s.month.split(' ')[1]).filter(Boolean))).sort().reverse()
+  const filteredHistory = historySlips
+    .filter(s => !historySearch.trim() || s.month.toLowerCase().includes(historySearch.toLowerCase()))
+    .filter(s => historyYearFilter === 'all' || s.month.endsWith(historyYearFilter))
+    .sort((a, b) => {
+      const cmp = monthSortKey(a.month).localeCompare(monthSortKey(b.month))
+      return historySortDir === 'desc' ? -cmp : cmp
+    })
 
   return (
     <>
@@ -220,13 +238,23 @@ export default function SalaryClient({ teachers, slips, advances, loadError }: {
               <h3 className="font-display text-[16px] font-semibold">تنخواہ کی تاریخ — {historyFor.full_name}</h3>
               <button onClick={() => setHistoryFor(null)} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
             </div>
-            <div className="px-6 py-3 border-b border-border">
+            <div className="px-6 py-3 border-b border-border flex items-center gap-2 flex-wrap">
               <input
                 value={historySearch}
                 onChange={e => setHistorySearch(e.target.value)}
                 placeholder="مہینہ یا تاریخ تلاش کریں..."
-                className="px-3 py-[8px] border border-border rounded-[9px] text-[12.5px] w-[240px] bg-surface"
+                className="px-3 py-[8px] border border-border rounded-[9px] text-[12.5px] w-[220px] bg-surface"
               />
+              <select value={historyYearFilter} onChange={e => setHistoryYearFilter(e.target.value)} className="px-2 py-[8px] border border-border rounded-[9px] text-[12.5px] bg-surface">
+                <option value="all">تمام سال</option>
+                {historyYears.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+              <button
+                onClick={() => setHistorySortDir(d => d === 'desc' ? 'asc' : 'desc')}
+                className="flex items-center gap-1 text-[12px] border border-border rounded-[7px] px-[10px] py-[6px] hover:border-primary transition-colors bg-surface"
+              >
+                <ArrowUpDown size={13} /> {historySortDir === 'desc' ? 'نئے پہلے' : 'پرانے پہلے'}
+              </button>
             </div>
 
             <h4 className="px-6 pt-4 pb-2 text-[13px] font-semibold text-muted">تنخواہ سلپس</h4>

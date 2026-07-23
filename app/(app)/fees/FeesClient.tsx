@@ -2,18 +2,18 @@
 
 import { useState, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { X, Trash2, Search, MessageCircle, Printer } from 'lucide-react'
+import { X, Trash2, Search, MessageCircle, Printer, ArrowUpDown } from 'lucide-react'
 import { collectFee, addFeeEntry, deleteFeeEntry } from './actions'
 import { feeStatusLabel } from '@/lib/labels'
 import { monthOptions, currentMonthLabel, urduMonthLabel } from '@/lib/months'
 
-type StudentInfo = { full_name: string; phone: string | null; guardian_name: string | null; classes: { name: string } | null }
+type StudentInfo = { full_name: string; phone: string | null; guardian_name: string | null; class_id: string | null; classes: { name: string } | null }
 type Fee = {
   id: string; student_id: string; month: string; amount: number; status: string; paid_on: string | null
   students: StudentInfo | null
   isVirtual?: boolean
 }
-type StudentOption = { id: string; full_name: string; phone: string | null; guardian_name: string | null; classes: { name: string } | null }
+type StudentOption = { id: string; full_name: string; phone: string | null; guardian_name: string | null; class_id?: string | null; classes: { name: string } | null }
 type ClassOption = { id: string; name: string }
 
 function whatsappNumber(phone: string) {
@@ -39,22 +39,64 @@ function monthSortKey(label: string) {
 export default function FeesClient({
   fees, students, classes, loadError,
 }: { fees: Fee[]; students: StudentOption[]; classes: ClassOption[]; loadError?: string }) {
+  const urlParams = useSearchParams()
+  const [viewMode, setViewMode] = useState<'current' | 'history'>(urlParams.get('q') ? 'history' : 'current')
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null)
+  const [currentSearch, setCurrentSearch] = useState(urlParams.get('q') || '')
+
   const [filter, setFilter] = useState<'All' | 'Paid' | 'Pending'>('All')
   const [showAdd, setShowAdd] = useState(false)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
-  const urlParams = useSearchParams()
-  const [search, setSearch] = useState(urlParams.get('q') || '')
+  const [historySearch, setHistorySearch] = useState(urlParams.get('q') || '')
   const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest')
+  const [yearFilter, setYearFilter] = useState<string>('all')
   const [showReminders, setShowReminders] = useState(false)
   const [notifyTarget, setNotifyTarget] = useState<{ name: string; guardian: string | null; phone: string | null; months: string[]; total: number } | null>(null)
   const [showPrint, setShowPrint] = useState(false)
 
+  const thisMonth = currentMonthLabel()
+  const currentMonthFees = useMemo(() => fees.filter(f => f.month === thisMonth), [fees, thisMonth])
+
+  const years = useMemo(() => {
+    const set = new Set<string>()
+    fees.forEach(f => { const y = f.month.split(' ')[1]; if (y) set.add(y) })
+    return Array.from(set).sort().reverse()
+  }, [fees])
+
+  // ===== Current month: class cards =====
+  const classSummaries = useMemo(() => {
+    return classes.map(c => {
+      const rows = currentMonthFees.filter(f => f.students?.class_id === c.id)
+      return {
+        ...c,
+        paidCount: rows.filter(f => f.status === 'Paid').length,
+        pendingCount: rows.filter(f => f.status === 'Pending').length,
+        total: rows.length,
+      }
+    })
+  }, [classes, currentMonthFees])
+
+  const showingCurrentTable = currentSearch.trim() !== '' || selectedClassId !== null
+
+  const currentRows = useMemo(() => {
+    if (currentSearch.trim()) {
+      const q = currentSearch.toLowerCase()
+      return currentMonthFees.filter(f => (f.students?.full_name || '').toLowerCase().includes(q) || (f.students?.classes?.name || '').toLowerCase().includes(q))
+    }
+    if (selectedClassId) {
+      return currentMonthFees.filter(f => f.students?.class_id === selectedClassId)
+    }
+    return []
+  }, [currentMonthFees, currentSearch, selectedClassId])
+
+  // ===== History table =====
   const filtered = useMemo(() => {
     let rows = fees.filter(f => filter === 'All' || f.status === filter)
-    if (search.trim()) {
-      const q = search.toLowerCase()
+    if (yearFilter !== 'all') rows = rows.filter(f => f.month.endsWith(yearFilter))
+    if (historySearch.trim()) {
+      const q = historySearch.toLowerCase()
       rows = rows.filter(f => (f.students?.full_name || '').toLowerCase().includes(q) || f.month.toLowerCase().includes(q))
     }
     rows = [...rows].sort((a, b) => {
@@ -62,7 +104,7 @@ export default function FeesClient({
       return sortOrder === 'latest' ? kb.localeCompare(ka) : ka.localeCompare(kb)
     })
     return rows
-  }, [fees, filter, search, sortOrder])
+  }, [fees, filter, yearFilter, historySearch, sortOrder])
 
   const pendingByStudent = useMemo(() => {
     const map = new Map<string, { name: string; guardian: string | null; phone: string | null; className: string; months: string[]; total: number }>()
@@ -167,15 +209,47 @@ ${urduMonths.map(m => `• ${m}`).join('\n')}
     else setShowAdd(false)
   }
 
+  function FeeRow({ f }: { f: Fee }) {
+    return (
+      <tr>
+        <td className="px-4 py-[11px] border-b border-border">{f.students?.full_name || '-'}</td>
+        <td className="px-4 py-[11px] border-b border-border">{f.students?.classes?.name || '-'}</td>
+        <td className="px-4 py-[11px] border-b border-border">{f.month}</td>
+        <td className="px-4 py-[11px] border-b border-border font-mono">Rs {Number(f.amount).toLocaleString('en-PK')}</td>
+        <td className="px-4 py-[11px] border-b border-border">{f.paid_on || '-'}</td>
+        <td className="px-4 py-[11px] border-b border-border">
+          <span className={`badge ${f.status === 'Paid' ? 'bg-income-bg text-income' : 'bg-danger-bg text-danger'}`}>{feeStatusLabel[f.status]}</span>
+        </td>
+        <td className="px-4 py-[11px] border-b border-border">
+          {f.status === 'Pending' ? (
+            <button onClick={() => handleCollect(f)} disabled={busyId === f.id} className="text-[12px] bg-gold text-[#2A2205] rounded-[7px] px-3 py-[6px] font-semibold disabled:opacity-60">
+              {busyId === f.id ? 'محفوظ ہو رہا ہے...' : 'وصول کریں'}
+            </button>
+          ) : (
+            <button onClick={() => printReceipt(f)} className="text-[12px] border border-border rounded-[7px] px-3 py-[6px] flex items-center gap-1">
+              <Printer size={12} /> رسید پرنٹ کریں
+            </button>
+          )}
+        </td>
+        <td className="px-4 py-[11px] border-b border-border">
+          {!f.isVirtual && (
+            <button onClick={() => handleDelete(f.id)} disabled={busyId === f.id} className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50">
+              <Trash2 size={14} />
+            </button>
+          )}
+        </td>
+      </tr>
+    )
+  }
+
   return (
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">فیس لوڈ نہیں ہو سکی: {loadError}</div>}
 
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
         <div className="flex gap-[6px] bg-[#F1ECDD] rounded-[9px] p-[3px]">
-          {(['All', 'Paid', 'Pending'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} className={`text-[12.5px] font-semibold px-[13px] py-[7px] rounded-[7px] ${filter === t ? 'bg-surface shadow-sm' : 'text-muted'}`}>{t === 'All' ? 'تمام' : feeStatusLabel[t]}</button>
-          ))}
+          <button onClick={() => setViewMode('current')} className={`text-[12.5px] font-semibold px-[13px] py-[7px] rounded-[7px] ${viewMode === 'current' ? 'bg-surface shadow-sm' : 'text-muted'}`}>موجودہ مہینہ ({thisMonth})</button>
+          <button onClick={() => setViewMode('history')} className={`text-[12.5px] font-semibold px-[13px] py-[7px] rounded-[7px] ${viewMode === 'history' ? 'bg-surface shadow-sm' : 'text-muted'}`}>مکمل تاریخ</button>
         </div>
         <div className="flex gap-2 flex-wrap">
           {pendingByStudent.length > 0 && (
@@ -190,64 +264,116 @@ ${urduMonths.map(m => `• ${m}`).join('\n')}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap mb-4">
-        <div className="relative">
-          <Search size={15} className="absolute left-[11px] top-[9px] text-muted" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="طالب علم یا مہینہ تلاش کریں..."
-            className="pl-[34px] pr-[14px] py-[8px] border border-border rounded-[9px] text-[12.5px] w-[220px] bg-surface"
-          />
-        </div>
-        <select value={sortOrder} onChange={e => setSortOrder(e.target.value as any)} className="px-2 py-[8px] border border-border rounded-[9px] text-[12.5px] bg-surface">
-          <option value="latest">تازہ ترین پہلے</option>
-          <option value="oldest">پرانے پہلے</option>
-        </select>
-      </div>
+      {viewMode === 'current' && (
+        <>
+          <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
+            <h3 className="text-[15.5px] font-semibold">کلاس منتخب کریں</h3>
+            <input
+              value={currentSearch}
+              onChange={e => setCurrentSearch(e.target.value)}
+              placeholder="طالب علم یا کلاس تلاش کریں..."
+              className="px-3 py-[8px] border border-border rounded-[9px] text-[12.5px] w-[220px] bg-surface"
+            />
+          </div>
 
-      <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
-        <table className="w-full min-w-[640px] text-[13px] border-collapse">
-          <thead>
-            <tr className="bg-[#FBF8F0]">
-              {['طالب علم', 'کلاس', 'مہینہ', 'رقم', 'ادائیگی کی تاریخ', 'حالت', '', ''].map(h => (
-                <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
+          {!showingCurrentTable && (
+            <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-[14px] mb-6">
+              {classSummaries.length === 0 && (
+                <div className="col-span-full text-center text-muted py-10 bg-surface border border-border rounded-card">ابھی کوئی کلاس نہیں۔</div>
+              )}
+              {classSummaries.map(c => (
+                <div
+                  key={c.id}
+                  onClick={() => setSelectedClassId(c.id)}
+                  className="bg-surface border border-border rounded-card p-[16px_18px] shadow-sm cursor-pointer hover:border-gold transition-colors"
+                >
+                  <div className="text-[15px] font-semibold mb-1">{c.name}</div>
+                  <div className="flex items-center gap-3 mt-2">
+                    <div>
+                      <div className="font-display font-mono text-[20px] font-semibold text-income">{c.paidCount}</div>
+                      <div className="text-[11px] text-muted">ادا شدہ</div>
+                    </div>
+                    <div>
+                      <div className="font-display font-mono text-[20px] font-semibold text-danger">{c.pendingCount}</div>
+                      <div className="text-[11px] text-muted">زیر التوا</div>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && <tr><td colSpan={8} className="text-center text-muted py-10">ابھی یہاں کوئی فیس ریکارڈ نہیں۔</td></tr>}
-            {filtered.map(f => (
-              <tr key={f.id}>
-                <td className="px-4 py-[11px] border-b border-border">{f.students?.full_name || '-'}</td>
-                <td className="px-4 py-[11px] border-b border-border">{f.students?.classes?.name || '-'}</td>
-                <td className="px-4 py-[11px] border-b border-border">{f.month}</td>
-                <td className="px-4 py-[11px] border-b border-border font-mono">Rs {Number(f.amount).toLocaleString('en-PK')}</td>
-                <td className="px-4 py-[11px] border-b border-border">{f.paid_on || '-'}</td>
-                <td className="px-4 py-[11px] border-b border-border">
-                  <span className={`badge ${f.status === 'Paid' ? 'bg-income-bg text-income' : 'bg-danger-bg text-danger'}`}>{feeStatusLabel[f.status]}</span>
-                </td>
-                <td className="px-4 py-[11px] border-b border-border">
-                  {f.status === 'Pending' ? (
-                    <button onClick={() => handleCollect(f)} disabled={busyId === f.id} className="text-[12px] bg-gold text-[#2A2205] rounded-[7px] px-3 py-[6px] font-semibold disabled:opacity-60">
-                      {busyId === f.id ? 'محفوظ ہو رہا ہے...' : 'وصول کریں'}
-                    </button>
-                  ) : (
-                    <button onClick={() => printReceipt(f)} className="text-[12px] border border-border rounded-[7px] px-3 py-[6px]">رسید پرنٹ کریں</button>
-                  )}
-                </td>
-                <td className="px-4 py-[11px] border-b border-border">
-                  {!f.isVirtual && (
-                    <button onClick={() => handleDelete(f.id)} disabled={busyId === f.id} className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50">
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </div>
+          )}
+
+          {showingCurrentTable && (
+            <>
+              {selectedClassId && !currentSearch.trim() && (
+                <button onClick={() => setSelectedClassId(null)} className="text-[12.5px] text-primary underline mb-3">← تمام کلاسز پر واپس جائیں</button>
+              )}
+              <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto mb-6">
+                <table className="w-full min-w-[640px] text-[13px] border-collapse">
+                  <thead>
+                    <tr className="bg-[#FBF8F0]">
+                      {['طالب علم', 'کلاس', 'مہینہ', 'رقم', 'ادائیگی کی تاریخ', 'حالت', '', ''].map(h => (
+                        <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentRows.length === 0 && <tr><td colSpan={8} className="text-center text-muted py-10">کوئی نتیجہ نہیں ملا۔</td></tr>}
+                    {currentRows.map(f => <FeeRow key={f.id} f={f} />)}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {viewMode === 'history' && (
+        <>
+          <div className="flex items-center gap-2 flex-wrap mb-4">
+            <div className="flex gap-[6px] bg-[#F1ECDD] rounded-[9px] p-[3px]">
+              {(['All', 'Paid', 'Pending'] as const).map(t => (
+                <button key={t} onClick={() => setFilter(t)} className={`text-[12.5px] font-semibold px-[13px] py-[7px] rounded-[7px] ${filter === t ? 'bg-surface shadow-sm' : 'text-muted'}`}>{t === 'All' ? 'تمام' : feeStatusLabel[t]}</button>
+              ))}
+            </div>
+            <select value={yearFilter} onChange={e => setYearFilter(e.target.value)} className="px-2 py-[8px] border border-border rounded-[9px] text-[12.5px] bg-surface">
+              <option value="all">تمام سال</option>
+              {years.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <div className="relative">
+              <Search size={15} className="absolute left-[11px] top-[9px] text-muted" />
+              <input
+                value={historySearch}
+                onChange={e => setHistorySearch(e.target.value)}
+                placeholder="طالب علم یا مہینہ تلاش کریں..."
+                className="pl-[34px] pr-[14px] py-[8px] border border-border rounded-[9px] text-[12.5px] w-[220px] bg-surface"
+              />
+            </div>
+            <button
+              onClick={() => setSortOrder(o => o === 'latest' ? 'oldest' : 'latest')}
+              className="flex items-center gap-1 text-[12px] border border-border rounded-[7px] px-[10px] py-[6px] hover:border-primary transition-colors bg-surface"
+            >
+              <ArrowUpDown size={13} /> {sortOrder === 'latest' ? 'تازہ ترین پہلے' : 'پرانے پہلے'}
+            </button>
+          </div>
+
+          <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+            <table className="w-full min-w-[640px] text-[13px] border-collapse">
+              <thead>
+                <tr className="bg-[#FBF8F0]">
+                  {['طالب علم', 'کلاس', 'مہینہ', 'رقم', 'ادائیگی کی تاریخ', 'حالت', '', ''].map(h => (
+                    <th key={h} className="text-left text-[11px] uppercase tracking-wide text-muted font-semibold px-4 py-[11px] border-b border-border">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 && <tr><td colSpan={8} className="text-center text-muted py-10">ابھی یہاں کوئی فیس ریکارڈ نہیں۔</td></tr>}
+                {filtered.map(f => <FeeRow key={f.id} f={f} />)}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
 
       {showAdd && (
         <div className="fixed inset-0 bg-primary-dark/35 z-50 flex justify-end" onClick={() => setShowAdd(false)}>

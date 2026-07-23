@@ -17,7 +17,7 @@ export default async function ProgressPage({
 
   let query = supabase
     .from('students')
-    .select('id, full_name, phone, classes(name), profiles!students_teacher_id_fkey(full_name)')
+    .select('id, full_name, phone, class_id, classes(name), profiles!students_teacher_id_fkey(full_name)')
     .eq('status', 'Active')
 
   if (!isAdmin) {
@@ -31,6 +31,9 @@ export default async function ProgressPage({
     classes: Array.isArray(s.classes) ? (s.classes[0] ?? null) : s.classes,
     profiles: Array.isArray(s.profiles) ? (s.profiles[0] ?? null) : s.profiles,
   }))
+
+  const { data: classesRaw } = await supabase.from('classes').select('id, name')
+  const classes = classesRaw || []
 
   const studentIds = normalizedStudents.map(s => s.id)
 
@@ -47,6 +50,7 @@ export default async function ProgressPage({
       key={selectedDate}
       role={profile?.role || 'teacher'}
       students={normalizedStudents}
+      classes={classes}
       showTeacherColumn={isAdmin}
       dayAttendance={dayAttendance || []}
       entries={allEntries || []}

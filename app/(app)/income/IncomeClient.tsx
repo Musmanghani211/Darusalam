@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react'
 import { X, Trash2, Search } from 'lucide-react'
 import { addIncome, deleteIncome } from './actions'
 import { incomeCategoryLabel } from '@/lib/labels'
+import { todayPKT } from '@/lib/date'
+import { monthOptions, currentMonthLabel } from '@/lib/months'
 
 type Row = { id: string; category: string; date: string; source: string; amount: number; purpose: string | null; notes: string | null }
 type FeeRow = { id: string; amount: number; paid_on: string | null; month: string; students: { full_name: string } | null }
@@ -23,31 +25,44 @@ export default function IncomeClient({
   const [formError, setFormError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest')
+  const [monthFilter, setMonthFilter] = useState<string>(currentMonthLabel())
+
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  const ymFor = (label: string) => {
+    const [mon, year] = label.split(' ')
+    const idx = MONTH_NAMES.indexOf(mon)
+    return idx >= 0 ? `${year}-${String(idx + 1).padStart(2, '0')}` : ''
+  }
+  const isAllTime = monthFilter === 'all'
+  const ym = ymFor(monthFilter)
+  const rowsInMonth = isAllTime ? rows : rows.filter(r => r.date?.startsWith(ym))
+  const feesRowsInMonth = isAllTime ? feesRows : feesRows.filter(r => r.paid_on?.startsWith(ym))
+  const fundsRowsInMonth = isAllTime ? fundsRows : fundsRows.filter(r => r.date?.startsWith(ym))
 
   const totals = useMemo(() => {
     const map: Record<string, number> = {}
     categories.forEach(c => (map[c] = 0))
-    rows.forEach(r => { map[r.category] = (map[r.category] || 0) + Number(r.amount) })
-    map[FEES_KEY] = feesRows.reduce((s, r) => s + Number(r.amount), 0)
-    map[FUNDS_KEY] = fundsRows.reduce((s, r) => s + Number(r.amount), 0)
+    rowsInMonth.forEach(r => { map[r.category] = (map[r.category] || 0) + Number(r.amount) })
+    map[FEES_KEY] = feesRowsInMonth.reduce((s, r) => s + Number(r.amount), 0)
+    map[FUNDS_KEY] = fundsRowsInMonth.reduce((s, r) => s + Number(r.amount), 0)
     return map
-  }, [rows, categories, feesRows, fundsRows])
+  }, [rowsInMonth, categories, feesRowsInMonth, fundsRowsInMonth])
 
   const grandTotal = allCards.reduce((s, c) => s + (totals[c] || 0), 0)
   const isReadOnly = selected === FEES_KEY || selected === FUNDS_KEY
 
   const filteredRows = useMemo(() => {
-    let r = rows.filter(r => r.category === selected)
+    let r = rowsInMonth.filter(r => r.category === selected)
     if (search.trim()) {
       const q = search.toLowerCase()
       r = r.filter(x => x.source.toLowerCase().includes(q) || (x.purpose || '').toLowerCase().includes(q) || (x.notes || '').toLowerCase().includes(q))
     }
     r = [...r].sort((a, b) => sortOrder === 'latest' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date))
     return r
-  }, [rows, selected, search, sortOrder])
+  }, [rowsInMonth, selected, search, sortOrder])
 
   const visibleFeesRows = useMemo(() => {
-    let r = feesRows
+    let r = feesRowsInMonth
     if (search.trim()) {
       const q = search.toLowerCase()
       r = r.filter(x => (x.students?.full_name || '').toLowerCase().includes(q) || x.month.toLowerCase().includes(q))
@@ -57,17 +72,17 @@ export default function IncomeClient({
       return sortOrder === 'latest' ? db.localeCompare(da) : da.localeCompare(db)
     })
     return r
-  }, [feesRows, search, sortOrder])
+  }, [feesRowsInMonth, search, sortOrder])
 
   const visibleFundsRows = useMemo(() => {
-    let r = fundsRows
+    let r = fundsRowsInMonth
     if (search.trim()) {
       const q = search.toLowerCase()
       r = r.filter(x => x.source.toLowerCase().includes(q) || (x.purpose || '').toLowerCase().includes(q))
     }
     r = [...r].sort((a, b) => sortOrder === 'latest' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date))
     return r
-  }, [fundsRows, search, sortOrder])
+  }, [fundsRowsInMonth, search, sortOrder])
 
   async function handleDelete(id: string) {
     if (!confirm('یہ اندراج حذف کریں؟')) return
@@ -89,8 +104,16 @@ export default function IncomeClient({
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">آمدنی لوڈ نہیں ہو سکی: {loadError}</div>}
 
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
+        <label className="text-[12.5px] font-semibold text-muted">مہینہ منتخب کریں:</label>
+        <select value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="px-3 py-[8px] border border-border rounded-[9px] text-[13px] bg-surface">
+          <option value="all">تمام وقت</option>
+          {monthOptions().map(m => <option key={m} value={m}>{m}</option>)}
+        </select>
+      </div>
+
       <div className="bg-surface border border-border rounded-card shadow-sm p-[14px_18px] mb-4 flex items-center justify-between">
-        <span className="text-[12.5px] font-semibold text-muted uppercase tracking-wide">کل آمدنی (تمام ذرائع)</span>
+        <span className="text-[12.5px] font-semibold text-muted uppercase tracking-wide">کل آمدنی ({isAllTime ? 'تمام وقت' : monthFilter})</span>
         <span className="font-mono text-[19px] font-semibold text-income">Rs {grandTotal.toLocaleString('en-PK')}</span>
       </div>
 
@@ -240,6 +263,10 @@ export default function IncomeClient({
               </div>
               <F label="عطیہ دہندہ / ذریعہ" name="source" required />
               <F label="رقم" name="amount" type="number" required />
+              <div>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">تاریخ</label>
+                <input name="date" type="date" max={todayPKT()} defaultValue={todayPKT()} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+              </div>
               <F label="مقصد" name="purpose" />
               <F label="نوٹس" name="notes" />
               <button type="submit" disabled={saving} className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors mt-1 disabled:opacity-60">

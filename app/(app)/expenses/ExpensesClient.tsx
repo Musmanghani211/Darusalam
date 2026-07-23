@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react'
 import { X, Trash2, Search } from 'lucide-react'
 import { addExpense, deleteExpense } from './actions'
 import { expenseCategoryLabel } from '@/lib/labels'
+import { todayPKT } from '@/lib/date'
+import { monthOptions, currentMonthLabel } from '@/lib/months'
 
 type Row = { id: string; category: string; date: string; amount: number; notes: string | null; profiles: { full_name: string } | null }
 
@@ -15,23 +17,36 @@ export default function ExpensesClient({ rows, categories, loadError }: { rows: 
   const [busyId, setBusyId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest')
+  const [monthFilter, setMonthFilter] = useState<string>(currentMonthLabel())
+
+  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  const ymFor = (label: string) => {
+    const [mon, year] = label.split(' ')
+    const idx = MONTH_NAMES.indexOf(mon)
+    return idx >= 0 ? `${year}-${String(idx + 1).padStart(2, '0')}` : ''
+  }
+  const isAllTime = monthFilter === 'all'
+  const ym = ymFor(monthFilter)
+  const rowsInMonth = isAllTime ? rows : rows.filter(r => r.date?.startsWith(ym))
 
   const totals = useMemo(() => {
     const map: Record<string, number> = {}
     categories.forEach(c => (map[c] = 0))
-    rows.forEach(r => { map[r.category] = (map[r.category] || 0) + Number(r.amount) })
+    rowsInMonth.forEach(r => { map[r.category] = (map[r.category] || 0) + Number(r.amount) })
     return map
-  }, [rows, categories])
+  }, [rowsInMonth, categories])
+
+  const grandTotal = categories.reduce((s, c) => s + (totals[c] || 0), 0)
 
   const filteredRows = useMemo(() => {
-    let r = rows.filter(r => r.category === selected)
+    let r = rowsInMonth.filter(r => r.category === selected)
     if (search.trim()) {
       const q = search.toLowerCase()
       r = r.filter(x => (x.notes || '').toLowerCase().includes(q) || (x.profiles?.full_name || '').toLowerCase().includes(q))
     }
     r = [...r].sort((a, b) => sortOrder === 'latest' ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date))
     return r
-  }, [rows, selected, search, sortOrder])
+  }, [rowsInMonth, selected, search, sortOrder])
 
   async function handleDelete(id: string) {
     if (!confirm('یہ اندراج حذف کریں؟')) return
@@ -52,6 +67,19 @@ export default function ExpensesClient({ rows, categories, loadError }: { rows: 
   return (
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">اخراجات لوڈ نہیں ہو سکے: {loadError}</div>}
+
+      <div className="flex items-center justify-between gap-2 flex-wrap mb-4">
+        <label className="text-[12.5px] font-semibold text-muted">مہینہ منتخب کریں:</label>
+        <select value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="px-3 py-[8px] border border-border rounded-[9px] text-[13px] bg-surface">
+          <option value="all">تمام وقت</option>
+          {monthOptions().map(m => <option key={m} value={m}>{m}</option>)}
+        </select>
+      </div>
+
+      <div className="bg-surface border border-border rounded-card shadow-sm p-[14px_18px] mb-4 flex items-center justify-between">
+        <span className="text-[12.5px] font-semibold text-muted uppercase tracking-wide">کل اخراجات ({isAllTime ? 'تمام وقت' : monthFilter})</span>
+        <span className="font-mono text-[19px] font-semibold text-danger">Rs {grandTotal.toLocaleString('en-PK')}</span>
+      </div>
 
       <div className="grid grid-cols-1 min-[480px]:grid-cols-2 max-[1100px]:grid-cols-2 lg:grid-cols-4 gap-[14px]">
         {categories.map(c => (
@@ -134,6 +162,10 @@ export default function ExpensesClient({ rows, categories, loadError }: { rows: 
               <div>
                 <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">رقم</label>
                 <input name="amount" type="number" required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+              </div>
+              <div>
+                <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">تاریخ</label>
+                <input name="date" type="date" max={todayPKT()} defaultValue={todayPKT()} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
               </div>
               <div>
                 <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">نوٹس</label>
