@@ -14,7 +14,7 @@ export default async function AttendancePage({
   const params = await searchParams
   const selectedDate = params?.date || todayPKT()
 
-  let studentQuery = supabase.from('students').select('id, full_name, phone, guardian_name, classes(name)').eq('status', 'Active')
+  let studentQuery = supabase.from('students').select('id, full_name, phone, guardian_name, class_id, classes(name)').eq('status', 'Active')
   if (profile?.role === 'teacher') studentQuery = studentQuery.eq('teacher_id', profile.id)
   const { data: studentsRaw } = await studentQuery
 
@@ -23,17 +23,21 @@ export default async function AttendancePage({
     classes: Array.isArray(s.classes) ? (s.classes[0] ?? null) : s.classes,
   }))
 
+  const { data: classesRaw } = await supabase.from('classes').select('id, name, teacher_id')
+  const classes = classesRaw || []
+
   const { data: teachers } = profile?.role !== 'teacher'
     ? await supabase.from('profiles').select('id, full_name').eq('role', 'teacher').eq('status', 'Active')
     : { data: [] as any[] }
 
-  const { data: dayAttendance } = await supabase.from('attendance').select('student_id, teacher_id, status').eq('date', selectedDate)
+  const { data: dayAttendance } = await supabase.from('attendance').select('student_id, teacher_id, status, notified').eq('date', selectedDate)
 
   return (
     <AttendanceClient
       key={selectedDate}
       role={profile?.role || 'teacher'}
       students={students}
+      classes={classes}
       teachers={teachers || []}
       dayAttendance={dayAttendance || []}
       selectedDate={selectedDate}

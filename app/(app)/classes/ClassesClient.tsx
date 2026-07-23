@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { X, Trash2 } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { X, Trash2, Search } from 'lucide-react'
 import { addClass, updateClassTeacher, deleteClass } from './actions'
 
 type ClassRow = { id: string; name: string; teacher_id: string | null; profiles: { full_name: string } | null }
@@ -14,6 +14,16 @@ export default function ClassesClient({
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return classes
+    const q = search.toLowerCase()
+    return classes.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      (teachers.find(t => t.id === c.teacher_id)?.full_name || '').toLowerCase().includes(q)
+    )
+  }, [classes, teachers, search])
 
   async function handleAdd(formData: FormData) {
     setSaving(true)
@@ -41,7 +51,16 @@ export default function ClassesClient({
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">کلاسز لوڈ نہیں ہو سکیں: {loadError}</div>}
 
-      <div className="flex justify-end mb-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+        <div className="relative">
+          <Search size={15} className="absolute left-[11px] top-[10px] text-muted" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="کلاس یا استاذ تلاش کریں..."
+            className="pl-[34px] pr-[14px] py-[9px] border border-border rounded-[9px] text-[13px] w-[230px] bg-surface"
+          />
+        </div>
         <button onClick={() => setShowAdd(true)} className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors">+ کلاس شامل کریں</button>
       </div>
 
@@ -55,8 +74,8 @@ export default function ClassesClient({
             </tr>
           </thead>
           <tbody>
-            {classes.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">ابھی کوئی کلاس نہیں۔ پہلی کلاس شامل کریں۔</td></tr>}
-            {classes.map(c => (
+            {filtered.length === 0 && <tr><td colSpan={4} className="text-center text-muted py-10">{search.trim() ? 'کوئی نتیجہ نہیں ملا۔' : 'ابھی کوئی کلاس نہیں۔ پہلی کلاس شامل کریں۔'}</td></tr>}
+            {filtered.map(c => (
               <tr key={c.id}>
                 <td className="px-4 py-[11px] border-b border-border font-semibold">{c.name}</td>
                 <td className="px-4 py-[11px] border-b border-border">

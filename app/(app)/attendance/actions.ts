@@ -36,3 +36,16 @@ export async function getStudentAttendanceHistory(studentId: string) {
 
   return { rows: data || [], error: error?.message || null }
 }
+
+export async function markNotified(studentId: string, date: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('attendance')
+    .update({ notified: true })
+    .eq('student_id', studentId)
+    .eq('date', date)
+    .eq('person_type', 'student')
+
+  revalidatePath('/attendance')
+  return { error: error?.message || null }
+}

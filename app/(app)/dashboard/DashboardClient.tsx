@@ -90,7 +90,7 @@ export default function DashboardClient({
   function Card({ id, label, value, delta, down }: { id: string; label: string; value: string; delta?: string; down?: boolean }) {
     return (
       <div
-        onClick={() => { setOpen(id); setSortDir('desc') }}
+        onClick={() => { setOpen(id); setSortDir('desc'); setDetailSearch('') }}
         className="relative bg-surface border border-border rounded-card p-[16px_18px] shadow-sm overflow-hidden cursor-pointer hover:border-gold transition-colors"
       >
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gold" />
@@ -186,12 +186,20 @@ export default function DashboardClient({
     }
   }, [open, activeStudents, activeStaff, monthIncome, monthFunds, monthFees, monthExpenses, totalIncomeAllTime, totalExpenseAllTime, balance, newAdmissions, paidFeesThisMonth, pendingFeesThisMonth, presentStudents, absentStudents, myStudents, myPresent, myAbsent])
 
+  const [detailSearch, setDetailSearch] = useState('')
+
   const sortedRows = useMemo(() => {
     const rows = [...detail.rows]
     if (open === 'balance') return rows // fixed order, not user-sortable
     rows.sort((a, b) => sortDir === 'desc' ? b.sortValue.localeCompare(a.sortValue) : a.sortValue.localeCompare(b.sortValue))
     return rows
   }, [detail, sortDir, open])
+
+  const filteredRows = useMemo(() => {
+    if (!detailSearch.trim()) return sortedRows
+    const q = detailSearch.toLowerCase()
+    return sortedRows.filter(r => r.cells.some(c => String(c).toLowerCase().includes(q)))
+  }, [sortedRows, detailSearch])
 
   return (
     <>
@@ -291,9 +299,17 @@ export default function DashboardClient({
       {open && (
         <div className="fixed inset-0 bg-primary-dark/35 z-50 flex items-center justify-center p-4" onClick={() => setOpen(null)}>
           <div className="w-[760px] max-w-[95vw] max-h-[85vh] bg-surface rounded-card shadow-sm flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-5 border-b border-border flex justify-between items-center">
+            <div className="px-6 py-5 border-b border-border flex justify-between items-center flex-wrap gap-2">
               <h3 className="font-display text-[17px] font-semibold">{titles[open]}</h3>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {open !== 'balance' && (
+                  <input
+                    value={detailSearch}
+                    onChange={e => setDetailSearch(e.target.value)}
+                    placeholder="تلاش کریں..."
+                    className="px-3 py-[7px] border border-border rounded-[8px] text-[12.5px] w-[160px] bg-[#FEFDFA]"
+                  />
+                )}
                 {open !== 'balance' && detail.rows.length > 1 && (
                   <button
                     onClick={() => setSortDir(d => d === 'desc' ? 'asc' : 'desc')}
@@ -315,10 +331,10 @@ export default function DashboardClient({
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedRows.length === 0 && (
+                  {filteredRows.length === 0 && (
                     <tr><td colSpan={detail.headers.length || 1} className="text-center text-muted py-10">کوئی ریکارڈ نہیں۔</td></tr>
                   )}
-                  {sortedRows.map((r, i) => (
+                  {filteredRows.map((r, i) => (
                     <tr key={i}>
                       {r.cells.map((c, j) => (
                         <td

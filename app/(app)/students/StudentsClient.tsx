@@ -58,6 +58,7 @@ export default function StudentsClient({
   loadError?: string
 }) {
   const [search, setSearch] = useState('')
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null)
   const [selected, setSelected] = useState<Student | null>(null)
   const [editMode, setEditMode] = useState(false)
   const [editClassId, setEditClassId] = useState('')
@@ -94,13 +95,27 @@ export default function StudentsClient({
       .sort((a, b) => (a.entry_date + a.created_at < b.entry_date + b.created_at ? 1 : -1))[0]
   }
 
+  const classSummaries = useMemo(() => {
+    return classes.map(c => ({
+      ...c,
+      studentCount: students.filter(s => s.class_id === c.id).length,
+    }))
+  }, [classes, students])
+
+  const showingTable = search.trim() !== '' || selectedClassId !== null
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return students
-    const q = search.toLowerCase()
-    return students.filter(s =>
-      s.full_name.toLowerCase().includes(q) || s.admission_no.toLowerCase().includes(q)
-    )
-  }, [search, students])
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      return students.filter(s =>
+        s.full_name.toLowerCase().includes(q) || s.admission_no.toLowerCase().includes(q)
+      )
+    }
+    if (selectedClassId) {
+      return students.filter(s => s.class_id === selectedClassId)
+    }
+    return []
+  }, [search, students, selectedClassId])
 
   async function handleEditSave(formData: FormData) {
     if (!selected) return
@@ -156,7 +171,40 @@ export default function StudentsClient({
         )}
       </div>
 
-      <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
+      {!showingTable && (
+        <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-[14px] mb-6">
+          {classSummaries.length === 0 && (
+            <div className="col-span-full text-center text-muted py-10 bg-surface border border-border rounded-card">ابھی کوئی کلاس نہیں بنائی گئی۔</div>
+          )}
+          {classSummaries.map(c => (
+            <div
+              key={c.id}
+              onClick={() => setSelectedClassId(c.id)}
+              className="bg-surface border border-border rounded-card p-[16px_18px] shadow-sm cursor-pointer hover:border-gold transition-colors"
+            >
+              <div className="text-[15px] font-semibold mb-1">{c.name}</div>
+              <div className="text-[12.5px] text-muted">استاذ: {teachers.find(t => t.id === c.teacher_id)?.full_name || 'کوئی مقرر نہیں'}</div>
+              <div className="font-display font-mono text-[22px] font-semibold mt-2">{c.studentCount}</div>
+              <div className="text-[11.5px] text-muted">طلبہ</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showingTable && (
+        <>
+          {selectedClassId && !search.trim() && (
+            <button
+              onClick={() => setSelectedClassId(null)}
+              className="text-[12.5px] text-primary underline mb-3"
+            >
+              ← تمام کلاسز پر واپس جائیں
+            </button>
+          )}
+          {search.trim() && (
+            <p className="text-[12.5px] text-muted mb-3">"{search}" کے لیے تمام کلاسز میں تلاش کے نتائج:</p>
+          )}
+          <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
         <table className="w-full min-w-[640px] text-[13px] border-collapse">
           <thead>
             <tr className="bg-[#FBF8F0]">
@@ -167,7 +215,7 @@ export default function StudentsClient({
           </thead>
           <tbody>
             {filtered.length === 0 && (
-              <tr><td colSpan={7} className="text-center text-muted py-10">ابھی کوئی طالب علم نہیں۔ پہلا داخلہ شامل کریں۔</td></tr>
+              <tr><td colSpan={7} className="text-center text-muted py-10">{search.trim() ? 'کوئی نتیجہ نہیں ملا۔' : 'اس کلاس میں ابھی کوئی طالب علم نہیں۔'}</td></tr>
             )}
             {filtered.map(s => (
               <tr key={s.id} onClick={() => { setSelected(s); setEditMode(false); setEditError(null) }} className="hover:bg-[#FBF8F0] cursor-pointer">
@@ -211,7 +259,9 @@ export default function StudentsClient({
             ))}
           </tbody>
         </table>
-      </div>
+          </div>
+        </>
+      )}
 
       {/* Detail drawer */}
       {selected && (
