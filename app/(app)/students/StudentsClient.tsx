@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import { Search, X, Trash2, Pencil, Eye } from 'lucide-react'
 import { addStudent, updateStudent, deleteStudent } from './actions'
 import { updateProgressEntry } from '../progress/actions'
-import { statusLabel, feeStatusLabel } from '@/lib/labels'
-import { currentMonthLabel } from '@/lib/months'
+import { statusLabel } from '@/lib/labels'
+import { urduMonthLabel } from '@/lib/months'
 import { todayPKT } from '@/lib/date'
 import { surahsForPara, ayatRangeForParaSurah, surahName } from '@/lib/quran-data'
 
@@ -45,13 +46,14 @@ type ProgressEntry = {
 }
 
 export default function StudentsClient({
-  role, students, classes, teachers, feesByStudent, progressEntries, loadError,
+  role, students, classes, teachers, feesByStudent, pendingMonthsByStudent, progressEntries, loadError,
 }: {
   role: string
   students: Student[]
   classes: { id: string; name: string; teacher_id: string | null }[]
   teachers: { id: string; full_name: string }[]
   feesByStudent: { student_id: string; status: string; month: string }[]
+  pendingMonthsByStudent: Record<string, string[]>
   progressEntries: ProgressEntry[]
   loadError?: string
 }) {
@@ -84,12 +86,6 @@ export default function StudentsClient({
 
   const canManage = role === 'mohtamim' || role === 'nazim'
   const today = todayPKT()
-
-  const thisMonth = currentMonthLabel()
-  const feeStatusFor = (studentId: string) => {
-    const row = feesByStudent.find(f => f.student_id === studentId && f.month === thisMonth)
-    return row?.status || 'Pending'
-  }
 
   const entriesFor = (studentId: string) => progressEntries.filter(e => e.student_id === studentId)
   const latestFor = (studentId: string, type: string) => {
@@ -181,9 +177,30 @@ export default function StudentsClient({
                 <td className="px-4 py-[11px] border-b border-border">{s.profiles?.full_name || '-'}</td>
                 <td className="px-4 py-[11px] border-b border-border">{s.admission_date}</td>
                 <td className="px-4 py-[11px] border-b border-border">
-                  <span className={`badge ${feeStatusFor(s.id) === 'Paid' ? 'bg-income-bg text-income' : 'bg-danger-bg text-danger'}`}>
-                    {feeStatusLabel[feeStatusFor(s.id)]}
-                  </span>
+                  {(() => {
+                    const pendingMonths = (pendingMonthsByStudent[s.id] || [])
+                    if (s.fee_type === 'Sabeel Lillah') {
+                      return <span className="badge bg-[#EFEEE7] text-muted">سبیل للہ</span>
+                    }
+                    if (pendingMonths.length === 0) {
+                      return <span className="badge bg-income-bg text-income">ادا شدہ</span>
+                    }
+                    const label = pendingMonths.length === 1
+                      ? `باقی: ${urduMonthLabel(pendingMonths[0])}`
+                      : `${pendingMonths.length} مہینے باقی`
+                    return (
+                      <div className="flex items-center gap-1.5">
+                        <span className="badge bg-danger-bg text-danger whitespace-nowrap">{label}</span>
+                        <Link
+                          href={`/fees?q=${encodeURIComponent(s.full_name)}`}
+                          className="text-[11px] text-primary underline shrink-0"
+                          title="فیس پیج پر تفصیل دیکھیں"
+                        >
+                          تفصیل
+                        </Link>
+                      </div>
+                    )
+                  })()}
                 </td>
                 <td className="px-4 py-[11px] border-b border-border">
                   <span className={`badge ${s.status === 'Active' ? 'bg-[#EFEEE7] text-muted' : 'bg-danger-bg text-danger'}`}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { X, Trash2, Search, MessageCircle, Printer } from 'lucide-react'
 import { collectFee, addFeeEntry, deleteFeeEntry } from './actions'
 import { feeStatusLabel } from '@/lib/labels'
@@ -43,7 +44,8 @@ export default function FeesClient({
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
+  const urlParams = useSearchParams()
+  const [search, setSearch] = useState(urlParams.get('q') || '')
   const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest')
   const [showReminders, setShowReminders] = useState(false)
   const [notifyTarget, setNotifyTarget] = useState<{ name: string; guardian: string | null; phone: string | null; months: string[]; total: number } | null>(null)
