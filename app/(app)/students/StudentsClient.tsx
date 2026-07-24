@@ -27,6 +27,7 @@ type Student = {
   cnic_or_bform: string | null
   address: string | null
   admission_date: string
+  status_date: string | null
   current_sabaq: string | null
   sabqi: string | null
   manzil: string | null
@@ -95,27 +96,32 @@ export default function StudentsClient({
       .sort((a, b) => (a.entry_date + a.created_at < b.entry_date + b.created_at ? 1 : -1))[0]
   }
 
+  const [statusFilter, setStatusFilter] = useState<'Active' | 'Left' | 'Completed' | 'All'>('Active')
+  const statusFilteredStudents = useMemo(() => {
+    return statusFilter === 'All' ? students : students.filter(s => s.status === statusFilter)
+  }, [students, statusFilter])
+
   const classSummaries = useMemo(() => {
     return classes.map(c => ({
       ...c,
-      studentCount: students.filter(s => s.class_id === c.id).length,
+      studentCount: statusFilteredStudents.filter(s => s.class_id === c.id).length,
     }))
-  }, [classes, students])
+  }, [classes, statusFilteredStudents])
 
   const showingTable = search.trim() !== '' || selectedClassId !== null
 
   const filtered = useMemo(() => {
     if (search.trim()) {
       const q = search.toLowerCase()
-      return students.filter(s =>
+      return statusFilteredStudents.filter(s =>
         s.full_name.toLowerCase().includes(q) || s.admission_no.toLowerCase().includes(q)
       )
     }
     if (selectedClassId) {
-      return students.filter(s => s.class_id === selectedClassId)
+      return statusFilteredStudents.filter(s => s.class_id === selectedClassId)
     }
     return []
-  }, [search, students, selectedClassId])
+  }, [search, statusFilteredStudents, selectedClassId])
 
   async function handleEditSave(formData: FormData) {
     if (!selected) return
@@ -150,6 +156,12 @@ export default function StudentsClient({
           طلبہ لوڈ نہیں ہو سکے: {loadError}
         </div>
       )}
+
+      <div className="flex gap-[6px] bg-[#F1ECDD] rounded-[9px] p-[3px] mb-4 w-fit">
+        {([['Active', 'فعال'], ['Left', 'چھوڑ گئے'], ['Completed', 'فارغ التحصیل'], ['All', 'تمام']] as const).map(([val, label]) => (
+          <button key={val} onClick={() => setStatusFilter(val)} className={`text-[12.5px] font-semibold px-[13px] py-[7px] rounded-[7px] ${statusFilter === val ? 'bg-surface shadow-sm' : 'text-muted'}`}>{label}</button>
+        ))}
+      </div>
 
       <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
         <div className="relative">
@@ -196,7 +208,7 @@ export default function StudentsClient({
           {selectedClassId && !search.trim() && (
             <button
               onClick={() => setSelectedClassId(null)}
-              className="text-[12.5px] text-primary underline mb-3"
+              className="text-[12.5px] text-primary mb-3 font-semibold flex items-center gap-1 hover:text-primary-light"
             >
               ← تمام کلاسز پر واپس جائیں
             </button>
@@ -290,6 +302,9 @@ export default function StudentsClient({
                   <DlRow label="کلاس" value={selected.classes?.name || '-'} />
                   <DlRow label="مقرر استاذ" value={selected.profiles?.full_name || '-'} />
                   <DlRow label="حالت" value={statusLabel[selected.status] || selected.status} />
+                  {selected.status_date && (selected.status === 'Left' || selected.status === 'Completed') && (
+                    <DlRow label={selected.status === 'Left' ? 'چھوڑنے کی تاریخ' : 'فارغ التحصیل ہونے کی تاریخ'} value={selected.status_date} />
+                  )}
                 </DlGroup>
                 <DlGroup title="فیس کی تفصیل">
                   <DlRow label="فیس کی قسم" value={selected.fee_type === 'Sabeel Lillah' ? 'سبیل للہ (معاف)' : 'باقاعدہ'} />
@@ -393,7 +408,8 @@ export default function StudentsClient({
                   <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">حالت</label>
                   <select name="status" defaultValue={selected.status} className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]">
                     <option value="Active">فعال</option>
-                    <option value="Inactive">غیر فعال</option>
+                    <option value="Left">چھوڑ گیا</option>
+                    <option value="Completed">مکمل کر گیا (فارغ التحصیل)</option>
                   </select>
                 </div>
                 <div>

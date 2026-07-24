@@ -146,7 +146,7 @@ export default function ProgressClient({
       {showingTable && (
         <>
           {showTeacherColumn && selectedClassId && !search.trim() && (
-            <button onClick={() => setSelectedClassId(null)} className="text-[12.5px] text-primary underline mb-3">← تمام کلاسز پر واپس جائیں</button>
+            <button onClick={() => setSelectedClassId(null)} className="text-[12.5px] text-primary mb-3 font-semibold flex items-center gap-1 hover:text-primary-light">← تمام کلاسز پر واپس جائیں</button>
           )}
           <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto">
         <table className="w-full min-w-[760px] text-[13px] border-collapse">

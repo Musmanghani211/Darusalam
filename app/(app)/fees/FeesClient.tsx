@@ -306,7 +306,7 @@ ${urduMonths.map(m => `• ${m}`).join('\n')}
           {showingCurrentTable && (
             <>
               {selectedClassId && !currentSearch.trim() && (
-                <button onClick={() => setSelectedClassId(null)} className="text-[12.5px] text-primary underline mb-3">← تمام کلاسز پر واپس جائیں</button>
+                <button onClick={() => setSelectedClassId(null)} className="text-[12.5px] text-primary mb-3 font-semibold flex items-center gap-1 hover:text-primary-light">← تمام کلاسز پر واپس جائیں</button>
               )}
               <div className="bg-surface border border-border rounded-card shadow-sm overflow-x-auto mb-6">
                 <table className="w-full min-w-[640px] text-[13px] border-collapse">

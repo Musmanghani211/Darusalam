@@ -16,15 +16,16 @@ export default async function DashboardPage() {
 
   const [
     { data: students }, { data: teachers }, { data: income }, { data: expenses },
-    { data: fees }, { data: funds }, { data: attendanceToday },
+    { data: fees }, { data: funds }, { data: attendanceToday }, { data: monthAttendance },
   ] = await Promise.all([
-    supabase.from('students').select('id, full_name, status, admission_date, fee_effective_from, teacher_id, monthly_fee, fee_type, classes(name)'),
+    supabase.from('students').select('id, full_name, status, admission_date, fee_effective_from, teacher_id, class_id, monthly_fee, fee_type, classes(name)'),
     supabase.from('profiles').select('id, full_name, status, role').in('role', ['teacher', 'nazim', 'staff']),
     supabase.from('income').select('*'),
     supabase.from('expenses').select('*, profiles(full_name)'),
     supabase.from('fees').select('*, students(full_name)'),
     supabase.from('other_funds').select('*'),
     supabase.from('attendance').select('status, person_type, student_id, teacher_id, students(full_name), profiles!attendance_teacher_id_fkey(full_name)').eq('date', today),
+    supabase.from('attendance').select('student_id, status').eq('person_type', 'student').gte('date', monthStartStr).lte('date', today),
   ])
 
   const normalize = (rows: any[] | null, key: string) =>
@@ -51,6 +52,7 @@ export default async function DashboardPage() {
       fees={allFees}
       funds={funds || []}
       attendanceToday={normalize(normalize(attendanceToday, 'students'), 'profiles')}
+      monthAttendance={monthAttendance || []}
     />
   )
 }

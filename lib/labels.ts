@@ -5,6 +5,8 @@ export const statusLabel: Record<string, string> = {
   Active: 'فعال',
   Inactive: 'غیر فعال',
   Disabled: 'معطل',
+  Left: 'چھوڑ گیا',
+  Completed: 'مکمل کر گیا',
 }
 
 export const feeStatusLabel: Record<string, string> = {

@@ -59,13 +59,22 @@ export async function updateStudent(studentId: string, formData: FormData) {
 
   // If this student is being switched BACK from Sabeel Lillah to Regular,
   // start their recurring fees from today — not from old "waived" months.
-  const { data: existing } = await supabase.from('students').select('fee_type').eq('id', studentId).single()
+  const { data: existing } = await supabase.from('students').select('fee_type, status').eq('id', studentId).single()
   const reactivatingFees = existing?.fee_type === 'Sabeel Lillah' && fee_type === 'Regular'
+
+  // Track when a student left / completed — and clear it if they're made Active again.
+  let statusDateUpdate: { status_date?: string | null } = {}
+  if ((status === 'Left' || status === 'Completed') && existing?.status !== status) {
+    statusDateUpdate = { status_date: todayPKT() }
+  } else if (status === 'Active') {
+    statusDateUpdate = { status_date: null }
+  }
 
   const { error } = await supabase.from('students').update({
     full_name, class_id, teacher_id, guardian_name, phone, cnic_or_bform, address, status,
     monthly_fee, fee_type, ...(admission_date ? { admission_date } : {}),
     ...(reactivatingFees ? { fee_effective_from: todayPKT() } : {}),
+    ...statusDateUpdate,
   }).eq('id', studentId)
 
   revalidateAll()

@@ -18,12 +18,13 @@ type Props = {
   fees: any[]
   funds: any[]
   attendanceToday: any[]
+  monthAttendance: any[]
 }
 
 type DetailRow = { cells: (string | number)[]; sortValue: string; tone?: 'positive' | 'negative' }
 
 export default function DashboardClient({
-  role, myId, today, monthStart, students, teachers, income, expenses, fees, funds, attendanceToday,
+  role, myId, today, monthStart, students, teachers, income, expenses, fees, funds, attendanceToday, monthAttendance,
 }: Props) {
   const [open, setOpen] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc')
@@ -79,6 +80,22 @@ export default function DashboardClient({
     return rows
   }, [fees, income, funds, expenses, monthStart])
 
+  const studentClassMap = useMemo(() => {
+    const m: Record<string, string> = {}
+    students.forEach((s: any) => { m[s.id] = s.classes?.name || '-' })
+    return m
+  }, [students])
+
+  const mostAbsentList = useMemo(() => {
+    const counts: Record<string, number> = {}
+    monthAttendance.forEach((a: any) => { if (a.status === 'Absent') counts[a.student_id] = (counts[a.student_id] || 0) + 1 })
+    return students
+      .filter((s: any) => s.status === 'Active')
+      .map((s: any) => ({ ...s, absentCount: counts[s.id] || 0 }))
+      .filter((s: any) => s.absentCount > 0)
+      .sort((a: any, b: any) => b.absentCount - a.absentCount)
+  }, [students, monthAttendance])
+
   const studentAttendance = attendanceToday.filter(a => a.person_type === 'student')
   const presentStudents = studentAttendance.filter(a => a.status === 'Present')
   const absentStudents = studentAttendance.filter(a => a.status === 'Absent')
@@ -105,6 +122,7 @@ export default function DashboardClient({
     students: 'کل طلبہ', teachers: 'کل عملہ', monthlyIncome: `آمدنی — ${thisMonth}`,
     monthlyExpense: `اخراجات — ${thisMonth}`, balance: 'موجودہ بیلنس', admissions: 'نئے داخلے',
     feesCollected: `وصول شدہ فیس — ${thisMonth}`, pendingFees: `زیر التوا فیس — ${thisMonth}`, attendance: 'آج کی حاضری',
+    mostAbsent: 'زیادہ غیر حاضر — اس مہینے',
     myStudents: 'میرے طلبہ', myAttendance: 'آج کی حاضری',
   }
 
@@ -162,11 +180,20 @@ export default function DashboardClient({
         }
       case 'attendance':
         return {
-          headers: ['نام', 'حالت'],
+          headers: ['نام', 'کلاس', 'حالت'],
           rows: [
-            ...presentStudents.map((a: any) => ({ cells: [a.students?.full_name || '-', 'حاضر'], sortValue: '1' + (a.students?.full_name || ''), tone: 'positive' as const })),
-            ...absentStudents.map((a: any) => ({ cells: [a.students?.full_name || '-', 'غیر حاضر'], sortValue: '0' + (a.students?.full_name || ''), tone: 'negative' as const })),
+            ...presentStudents.map((a: any) => ({ cells: [a.students?.full_name || '-', studentClassMap[a.student_id] || '-', 'حاضر'], sortValue: '1' + (a.students?.full_name || ''), tone: 'positive' as const })),
+            ...absentStudents.map((a: any) => ({ cells: [a.students?.full_name || '-', studentClassMap[a.student_id] || '-', 'غیر حاضر'], sortValue: '0' + (a.students?.full_name || ''), tone: 'negative' as const })),
           ],
+        }
+      case 'mostAbsent':
+        return {
+          headers: ['نام', 'کلاس', 'غیر حاضر دن (اس مہینے)'],
+          rows: mostAbsentList.map((s: any) => ({
+            cells: [s.full_name, s.classes?.name || '-', String(s.absentCount)],
+            sortValue: String(s.absentCount).padStart(3, '0'),
+            tone: s.absentCount >= 5 ? 'negative' as const : undefined,
+          })),
         }
       case 'myStudents':
         return {
@@ -214,6 +241,7 @@ export default function DashboardClient({
           <Card id="feesCollected" label={`وصول شدہ فیس — ${thisMonth}`} value={fmtMoney(feesCollectedTotal)} />
           <Card id="pendingFees" label={`زیر التوا فیس — ${thisMonth}`} value={fmtMoney(pendingFeesTotal)} down />
           <Card id="attendance" label="آج کی حاضری" value={`${presentStudents.length} / ${activeStudents.length}`} />
+          <Card id="mostAbsent" label="زیادہ غیر حاضر — اس مہینے" value={mostAbsentList[0] ? `${mostAbsentList[0].full_name} (${mostAbsentList[0].absentCount})` : "کوئی نہیں"} />
         </div>
       )}
 
@@ -225,6 +253,7 @@ export default function DashboardClient({
           <Card id="pendingFees" label={`زیر التوا فیس — ${thisMonth}`} value={fmtMoney(pendingFeesTotal)} down />
           <Card id="admissions" label="نئے داخلے" value={String(newAdmissions.length)} />
           <Card id="attendance" label="آج کی حاضری" value={`${presentStudents.length} / ${activeStudents.length}`} />
+          <Card id="mostAbsent" label="زیادہ غیر حاضر — اس مہینے" value={mostAbsentList[0] ? `${mostAbsentList[0].full_name} (${mostAbsentList[0].absentCount})` : "کوئی نہیں"} />
         </div>
       )}
 
