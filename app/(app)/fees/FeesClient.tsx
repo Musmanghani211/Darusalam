@@ -62,6 +62,11 @@ export default function FeesClient({
   const years = useMemo(() => {
     const set = new Set<string>()
     fees.forEach(f => { const y = f.month.split(' ')[1]; if (y) set.add(y) })
+    // Always include a few years around today too, so future years (with no
+    // data yet) still show up in the dropdown instead of only appearing once
+    // something gets recorded in them.
+    const nowYear = Number(currentMonthLabel().split(' ')[1])
+    for (let y = nowYear - 2; y <= nowYear + 3; y++) set.add(String(y))
     return Array.from(set).sort().reverse()
   }, [fees])
 

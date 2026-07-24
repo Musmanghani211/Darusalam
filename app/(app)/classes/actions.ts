@@ -51,3 +51,17 @@ export async function deleteClass(classId: string) {
   revalidateAll()
   return { error: error?.message || null }
 }
+
+export async function assignStudentsToClass(classId: string, studentIds: string[]) {
+  const supabase = await createClient()
+
+  const { data: cls } = await supabase.from('classes').select('teacher_id').eq('id', classId).single()
+
+  const { error } = await supabase
+    .from('students')
+    .update({ class_id: classId, teacher_id: cls?.teacher_id || null })
+    .in('id', studentIds)
+
+  revalidateAll()
+  return { error: error?.message || null }
+}

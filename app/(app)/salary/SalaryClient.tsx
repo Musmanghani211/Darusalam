@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { X, Trash2, Pencil, Printer, ArrowUpDown } from 'lucide-react'
 import { generateSalary, deleteSalarySlip, addAdvance, updateSalarySlip, deleteAdvance } from './actions'
 import { monthOptions, currentMonthLabel } from '@/lib/months'
@@ -142,7 +142,13 @@ export default function SalaryClient({ teachers, slips, advances, loadError }: {
   const historyAdvances = historyFor
     ? advances.filter(a => a.teacher_id === historyFor.id && (!historySearch.trim() || a.date.includes(historySearch)))
     : []
-  const historyYears = Array.from(new Set(historySlips.map(s => s.month.split(' ')[1]).filter(Boolean))).sort().reverse()
+  const historyYears = useMemo(() => {
+    const set = new Set<string>()
+    historySlips.forEach(s => { const y = s.month.split(' ')[1]; if (y) set.add(y) })
+    const nowYear = Number(currentMonthLabel().split(' ')[1])
+    for (let y = nowYear - 2; y <= nowYear + 3; y++) set.add(String(y))
+    return Array.from(set).sort().reverse()
+  }, [historySlips])
   const filteredHistory = historySlips
     .filter(s => !historySearch.trim() || s.month.toLowerCase().includes(historySearch.toLowerCase()))
     .filter(s => historyYearFilter === 'all' || s.month.endsWith(historyYearFilter))

@@ -25,11 +25,19 @@ export default async function ClassesPage() {
     if (s.class_id) studentCounts[s.class_id] = (studentCounts[s.class_id] || 0) + 1
   })
 
+  const { data: unassignedStudents } = await supabase
+    .from('students')
+    .select('id, full_name, admission_no')
+    .is('class_id', null)
+    .eq('status', 'Active')
+    .order('full_name')
+
   return (
     <ClassesClient
       classes={classes}
       teachers={teachers || []}
       studentCounts={studentCounts}
+      unassignedStudents={unassignedStudents || []}
       loadError={error?.message}
     />
   )
