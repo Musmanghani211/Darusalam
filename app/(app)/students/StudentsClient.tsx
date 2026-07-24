@@ -108,6 +108,8 @@ export default function StudentsClient({
     }))
   }, [classes, statusFilteredStudents])
 
+  const unassignedCount = useMemo(() => statusFilteredStudents.filter(s => !s.class_id).length, [statusFilteredStudents])
+
   const showingTable = search.trim() !== '' || selectedClassId !== null
 
   const filtered = useMemo(() => {
@@ -116,6 +118,9 @@ export default function StudentsClient({
       return statusFilteredStudents.filter(s =>
         s.full_name.toLowerCase().includes(q) || s.admission_no.toLowerCase().includes(q)
       )
+    }
+    if (selectedClassId === 'NONE') {
+      return statusFilteredStudents.filter(s => !s.class_id)
     }
     if (selectedClassId) {
       return statusFilteredStudents.filter(s => s.class_id === selectedClassId)
@@ -175,7 +180,7 @@ export default function StudentsClient({
         </div>
         {canManage && (
           <button
-            onClick={() => { setShowAddForm(true); setAddClassId(selectedClassId || ''); setAddFeeType('Regular') }}
+            onClick={() => { setShowAddForm(true); setAddClassId(selectedClassId && selectedClassId !== 'NONE' ? selectedClassId : ''); setAddFeeType('Regular') }}
             className="bg-primary text-white rounded-[9px] px-4 py-[9px] text-[13px] font-semibold hover:bg-primary-light transition-colors"
           >
             + نیا داخلہ
@@ -200,6 +205,17 @@ export default function StudentsClient({
               <div className="text-[11.5px] text-muted">طلبہ</div>
             </div>
           ))}
+          {unassignedCount > 0 && (
+            <div
+              onClick={() => setSelectedClassId('NONE')}
+              className="bg-danger-bg border border-danger rounded-card p-[16px_18px] shadow-sm cursor-pointer hover:opacity-90 transition-colors"
+            >
+              <div className="text-[15px] font-semibold mb-1 text-danger">بغیر کلاس طلبہ</div>
+              <div className="text-[12.5px] text-danger">کسی کلاس سے منسلک نہیں — دوبارہ تفویض کریں</div>
+              <div className="font-display font-mono text-[22px] font-semibold mt-2 text-danger">{unassignedCount}</div>
+              <div className="text-[11.5px] text-danger">طلبہ</div>
+            </div>
+          )}
         </div>
       )}
 

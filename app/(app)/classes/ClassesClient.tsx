@@ -14,6 +14,7 @@ export default function ClassesClient({
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
@@ -41,15 +42,18 @@ export default function ClassesClient({
   }
 
   async function handleDelete(classId: string) {
-    if (!confirm('یہ کلاس حذف کریں؟ اس سے منسلک طلبہ کا ریکارڈ رہے گا لیکن کلاس کا تعلق ختم ہو جائے گا۔')) return
+    if (!confirm('یہ کلاس حذف کریں؟ اس کلاس کے طلبہ خود بخود "بغیر کلاس" ہو جائیں گے (ان کا مکمل ریکارڈ — فیس، حاضری وغیرہ — محفوظ رہے گا، صرف کلاس کا تعلق ختم ہوگا)۔')) return
     setBusyId(classId)
-    await deleteClass(classId)
+    setDeleteError(null)
+    const res = await deleteClass(classId)
     setBusyId(null)
+    if (res?.error) setDeleteError(res.error)
   }
 
   return (
     <>
       {loadError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">کلاسز لوڈ نہیں ہو سکیں: {loadError}</div>}
+      {deleteError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2 mb-4">{deleteError}</div>}
 
       <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
         <div className="relative">

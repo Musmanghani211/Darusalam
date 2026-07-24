@@ -240,7 +240,7 @@ export default function DashboardClient({
           <Card id="admissions" label="نئے داخلے" value={String(newAdmissions.length)} />
           <Card id="feesCollected" label={`وصول شدہ فیس — ${thisMonth}`} value={fmtMoney(feesCollectedTotal)} />
           <Card id="pendingFees" label={`زیر التوا فیس — ${thisMonth}`} value={fmtMoney(pendingFeesTotal)} down />
-          <Card id="attendance" label="آج کی حاضری" value={`${presentStudents.length} / ${activeStudents.length}`} />
+          <Card id="attendance" label="آج کے غیر حاضر طلبہ" value={String(absentStudents.length)} delta={`${presentStudents.length + absentStudents.length} / ${activeStudents.length} کی حاضری درج ہوئی`} down={absentStudents.length > 0} />
           <Card id="mostAbsent" label="غیر حاضری کا رجحان — اس مہینے" value={`${concerningAbsentCount} طلبہ`} delta="3+ دن غیر حاضر" down={concerningAbsentCount > 0} />
         </div>
       )}
@@ -252,7 +252,7 @@ export default function DashboardClient({
           <Card id="feesCollected" label={`وصول شدہ فیس — ${thisMonth}`} value={fmtMoney(feesCollectedTotal)} />
           <Card id="pendingFees" label={`زیر التوا فیس — ${thisMonth}`} value={fmtMoney(pendingFeesTotal)} down />
           <Card id="admissions" label="نئے داخلے" value={String(newAdmissions.length)} />
-          <Card id="attendance" label="آج کی حاضری" value={`${presentStudents.length} / ${activeStudents.length}`} />
+          <Card id="attendance" label="آج کے غیر حاضر طلبہ" value={String(absentStudents.length)} delta={`${presentStudents.length + absentStudents.length} / ${activeStudents.length} کی حاضری درج ہوئی`} down={absentStudents.length > 0} />
           <Card id="mostAbsent" label="غیر حاضری کا رجحان — اس مہینے" value={`${concerningAbsentCount} طلبہ`} delta="3+ دن غیر حاضر" down={concerningAbsentCount > 0} />
         </div>
       )}

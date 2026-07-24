@@ -110,3 +110,10 @@ export async function resetTeacherPassword(teacherId: string, newPassword: strin
   revalidateAll()
   return { error: error?.message || null }
 }
+
+export async function updateTeacherEmail(teacherId: string, newEmail: string) {
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.updateUserById(teacherId, { email: newEmail, email_confirm: true })
+  revalidateAll()
+  return { error: error?.message || null }
+}

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { X, Trash2, Search, ArrowUpDown } from 'lucide-react'
-import { addTeacher, toggleTeacherStatus, updateTeacher, deleteTeacher, resetTeacherPassword } from './actions'
+import { addTeacher, toggleTeacherStatus, updateTeacher, deleteTeacher, resetTeacherPassword, updateTeacherEmail } from './actions'
 import { statusLabel } from '@/lib/labels'
 import { todayPKT } from '@/lib/date'
 
@@ -41,6 +41,10 @@ export default function TeachersClient({
   const [showAdd, setShowAdd] = useState(false)
   const [editTarget, setEditTarget] = useState<Teacher | null>(null)
   const [resetFor, setResetFor] = useState<Teacher | null>(null)
+  const [emailFor, setEmailFor] = useState<Teacher | null>(null)
+  const [emailSaving, setEmailSaving] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [emailDone, setEmailDone] = useState(false)
   const [resetSaving, setResetSaving] = useState(false)
   const [resetError, setResetError] = useState<string | null>(null)
   const [resetDone, setResetDone] = useState(false)
@@ -73,6 +77,18 @@ export default function TeachersClient({
     setResetSaving(false)
     if (res?.error) setResetError(res.error)
     else setResetDone(true)
+  }
+
+  async function handleUpdateEmail(formData: FormData) {
+    if (!emailFor) return
+    const newEmail = String(formData.get('new_email') || '')
+    setEmailSaving(true)
+    setEmailError(null)
+    setEmailDone(false)
+    const res = await updateTeacherEmail(emailFor.id, newEmail)
+    setEmailSaving(false)
+    if (res?.error) setEmailError(res.error)
+    else setEmailDone(true)
   }
 
   async function handleEditSave(formData: FormData) {
@@ -196,6 +212,12 @@ export default function TeachersClient({
                         پاس ورڈ ری سیٹ
                       </button>
                       <button
+                        onClick={() => { setEmailFor(t); setEmailDone(false); setEmailError(null) }}
+                        className="text-[12px] border border-border rounded-[7px] px-[11px] py-[6px] hover:border-primary transition-colors"
+                      >
+                        ای میل تبدیل کریں
+                      </button>
+                      <button
                         onClick={() => handleDelete(t)}
                         disabled={busyId === t.id}
                         className="text-danger hover:bg-danger-bg rounded-[7px] p-[6px] disabled:opacity-50"
@@ -314,6 +336,31 @@ export default function TeachersClient({
                 </div>
                 <button type="submit" disabled={resetSaving} className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors disabled:opacity-60">
                   {resetSaving ? 'محفوظ ہو رہا ہے...' : 'پاس ورڈ تبدیل کریں'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {emailFor && (
+        <div className="fixed inset-0 bg-primary-dark/35 z-50 flex items-center justify-center" onClick={() => { setEmailFor(null); setEmailDone(false); setEmailError(null) }}>
+          <div className="w-[380px] max-w-[92vw] bg-surface rounded-card p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-display text-[16px] font-semibold">ای میل تبدیل کریں — {emailFor.full_name}</h3>
+              <button onClick={() => { setEmailFor(null); setEmailDone(false); setEmailError(null) }} className="w-[30px] h-[30px] rounded-[8px] bg-[#F1ECDD] text-muted flex items-center justify-center"><X size={15} /></button>
+            </div>
+            {emailDone ? (
+              <p className="text-[13px] text-income">ای میل کامیابی سے تبدیل ہو گئی۔ اب سے وہی لاگ ان کے لیے استعمال ہوگی۔</p>
+            ) : (
+              <form action={handleUpdateEmail} className="flex flex-col gap-4">
+                {emailError && <div className="bg-danger-bg text-danger text-[13px] rounded-[9px] px-3 py-2">{emailError}</div>}
+                <div>
+                  <label className="block text-[11.5px] font-semibold text-muted uppercase tracking-wide mb-[5px]">نئی ای میل</label>
+                  <input name="new_email" type="email" required className="w-full px-3 py-[9px] border border-border rounded-[8px] text-[13px] bg-[#FEFDFA]" />
+                </div>
+                <button type="submit" disabled={emailSaving} className="bg-primary text-white rounded-[9px] py-[10px] text-[13.5px] font-semibold hover:bg-primary-light transition-colors disabled:opacity-60">
+                  {emailSaving ? 'محفوظ ہو رہا ہے...' : 'ای میل تبدیل کریں'}
                 </button>
               </form>
             )}

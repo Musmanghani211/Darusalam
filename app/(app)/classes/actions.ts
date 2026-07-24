@@ -40,6 +40,13 @@ export async function updateClassTeacher(classId: string, teacherId: string | nu
 
 export async function deleteClass(classId: string) {
   const supabase = await createClient()
+
+  // A class can't be deleted while students still point to it (foreign key) —
+  // instead of failing, unassign those students (they become "بغیر کلاس",
+  // still fully in the system with their history intact) so the class can
+  // actually be removed.
+  await supabase.from('students').update({ class_id: null, teacher_id: null }).eq('class_id', classId)
+
   const { error } = await supabase.from('classes').delete().eq('id', classId)
   revalidateAll()
   return { error: error?.message || null }
