@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import { X, ArrowUpDown } from 'lucide-react'
 import { fmtMoney } from '@/components/ReportRow'
 import { statusLabel } from '@/lib/labels'
@@ -96,6 +97,8 @@ export default function DashboardClient({
       .sort((a: any, b: any) => b.absentCount - a.absentCount)
   }, [students, monthAttendance])
 
+  const concerningAbsentCount = mostAbsentList.filter((s: any) => s.absentCount >= 3).length
+
   const studentAttendance = attendanceToday.filter(a => a.person_type === 'student')
   const presentStudents = studentAttendance.filter(a => a.status === 'Present')
   const absentStudents = studentAttendance.filter(a => a.status === 'Absent')
@@ -121,7 +124,7 @@ export default function DashboardClient({
   const titles: Record<string, string> = {
     students: 'کل طلبہ', teachers: 'کل عملہ', monthlyIncome: `آمدنی — ${thisMonth}`,
     monthlyExpense: `اخراجات — ${thisMonth}`, balance: 'موجودہ بیلنس', admissions: 'نئے داخلے',
-    feesCollected: `وصول شدہ فیس — ${thisMonth}`, pendingFees: `زیر التوا فیس — ${thisMonth}`, attendance: 'آج کی حاضری',
+    feesCollected: `وصول شدہ فیس — ${thisMonth}`, pendingFees: `زیر التوا فیس — ${thisMonth}`, attendance: 'آج کے غیر حاضر طلبہ',
     mostAbsent: 'زیادہ غیر حاضر — اس مہینے',
     myStudents: 'میرے طلبہ', myAttendance: 'آج کی حاضری',
   }
@@ -180,11 +183,8 @@ export default function DashboardClient({
         }
       case 'attendance':
         return {
-          headers: ['نام', 'کلاس', 'حالت'],
-          rows: [
-            ...presentStudents.map((a: any) => ({ cells: [a.students?.full_name || '-', studentClassMap[a.student_id] || '-', 'حاضر'], sortValue: '1' + (a.students?.full_name || ''), tone: 'positive' as const })),
-            ...absentStudents.map((a: any) => ({ cells: [a.students?.full_name || '-', studentClassMap[a.student_id] || '-', 'غیر حاضر'], sortValue: '0' + (a.students?.full_name || ''), tone: 'negative' as const })),
-          ],
+          headers: ['نام', 'کلاس'],
+          rows: absentStudents.map((a: any) => ({ cells: [a.students?.full_name || '-', studentClassMap[a.student_id] || '-'], sortValue: a.students?.full_name || '', tone: 'negative' as const })),
         }
       case 'mostAbsent':
         return {
@@ -241,7 +241,7 @@ export default function DashboardClient({
           <Card id="feesCollected" label={`وصول شدہ فیس — ${thisMonth}`} value={fmtMoney(feesCollectedTotal)} />
           <Card id="pendingFees" label={`زیر التوا فیس — ${thisMonth}`} value={fmtMoney(pendingFeesTotal)} down />
           <Card id="attendance" label="آج کی حاضری" value={`${presentStudents.length} / ${activeStudents.length}`} />
-          <Card id="mostAbsent" label="زیادہ غیر حاضر — اس مہینے" value={mostAbsentList[0] ? `${mostAbsentList[0].full_name} (${mostAbsentList[0].absentCount})` : "کوئی نہیں"} />
+          <Card id="mostAbsent" label="غیر حاضری کا رجحان — اس مہینے" value={`${concerningAbsentCount} طلبہ`} delta="3+ دن غیر حاضر" down={concerningAbsentCount > 0} />
         </div>
       )}
 
@@ -253,7 +253,7 @@ export default function DashboardClient({
           <Card id="pendingFees" label={`زیر التوا فیس — ${thisMonth}`} value={fmtMoney(pendingFeesTotal)} down />
           <Card id="admissions" label="نئے داخلے" value={String(newAdmissions.length)} />
           <Card id="attendance" label="آج کی حاضری" value={`${presentStudents.length} / ${activeStudents.length}`} />
-          <Card id="mostAbsent" label="زیادہ غیر حاضر — اس مہینے" value={mostAbsentList[0] ? `${mostAbsentList[0].full_name} (${mostAbsentList[0].absentCount})` : "کوئی نہیں"} />
+          <Card id="mostAbsent" label="غیر حاضری کا رجحان — اس مہینے" value={`${concerningAbsentCount} طلبہ`} delta="3+ دن غیر حاضر" down={concerningAbsentCount > 0} />
         </div>
       )}
 
@@ -331,6 +331,11 @@ export default function DashboardClient({
             <div className="px-6 py-5 border-b border-border flex justify-between items-center flex-wrap gap-2">
               <h3 className="font-display text-[17px] font-semibold">{titles[open]}</h3>
               <div className="flex items-center gap-2 flex-wrap">
+                {open === 'attendance' && (
+                  <Link href="/attendance" className="text-[12px] bg-primary text-white rounded-[7px] px-[10px] py-[6px] font-semibold hover:bg-primary-light transition-colors">
+                    مکمل تفصیل — حاضری کا صفحہ
+                  </Link>
+                )}
                 {open !== 'balance' && (
                   <input
                     value={detailSearch}
